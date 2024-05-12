@@ -1,8 +1,12 @@
 use std::{ops::Deref, ptr::NonNull};
 use wasm_bindgen::{JsCast, JsValue};
 
-use crate::web_ffi;
-
+// 封装 ViewObj 来同时支持 Canvas 与 Offscreen
+#[derive(Debug, Clone)]
+pub enum ViewObj {
+    Canvas(Canvas),
+    Offscreen(OffscreenCanvas),
+}
 #[derive(Debug, Clone)]
 pub struct Canvas {
     element: web_sys::HtmlCanvasElement,
@@ -89,7 +93,7 @@ impl raw_window_handle::HasDisplayHandle for Canvas {
 #[derive(Debug, Clone)]
 pub struct OffscreenCanvas {
     inner: web_sys::OffscreenCanvas,
-    scale_factor: f32,
+    pub scale_factor: f32,
     handle: u32,
 }
 
@@ -104,6 +108,12 @@ impl OffscreenCanvas {
 
     pub fn each(self) -> (web_sys::OffscreenCanvas, u32) {
         (self.inner, self.handle)
+    }
+
+    pub fn logical_resolution(&self) -> (f32, f32) {
+        let width = self.inner.width();
+        let height = self.inner.height();
+        (width as f32, height as f32)
     }
 }
 

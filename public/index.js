@@ -1,17 +1,48 @@
-import init, {
-  init_bevy_app,
-  finish_init,
-  enter_frame,
-} from "./bevy_in_web_worker.js";
+const worker = new Worker("./worker.js");
 
-let appHandle = 0;
-let initFinished = 0;
-async function initApp() {
-  await init();
-  appHandle = init_bevy_app();
-  initFinished = finish_init(appHandle);
-  // 开始动画
-  requestAnimationFrame(enterFrame);
+// worker 是否准备就绪
+let workerIsReady = false;
+
+// 监听 worker 发来的消息
+worker.onmessage = async (event) => {
+  let data = event.data;
+  switch (data.ty) {
+    case "workerIsReady":
+      workerIsReady = true;
+      break;
+    default:
+      break;
+  }
+};
+
+// 创建 app 窗口
+function createAppWindow() {
+  delayExecute(() => {
+    if (workerIsReady) {
+      // 创建渲染窗口
+      let canvas = document.getElementById("app-canvas");
+      let offscreenCanvas = canvas.transferControlToOffscreen();
+      let devicePixelRatio = window.devicePixelRatio;
+      worker.postMessage(
+        { ty: "init", canvas: offscreenCanvas, devicePixelRatio },
+        [offscreenCanvas]
+      );
+
+      enterFrame();
+
+      return true;
+    }
+    return false;
+  });
+}
+
+function delayExecute(fn, delay = 50) {
+  function execute() {
+    if (fn()) {
+      clearInterval(timer);
+    }
+  }
+  const timer = setInterval(execute, delay);
 }
 
 function launch() {
@@ -22,11 +53,11 @@ function launch() {
   if ("navigator" in window && "gpu" in navigator) {
     navigator.gpu
       .requestAdapter()
-      .then((adapter) => {
+      .then((_adapter) => {
         // 浏览器支持 WebGPU
-        initApp();
+        createAppWindow();
       })
-      .catch((error) => {
+      .catch((_error) => {
         showAlert();
       });
   } else {
@@ -71,12 +102,18 @@ function dispatch_resize_event() {
   }
 }
 
+let lastTime = performance.now();
+let maxFrameRate = 90; // 最多每秒90帧
+
 function enterFrame() {
-  // 当 app 准备好时，执行 app 的帧循环
-  if (initFinished > 0) {
-    enter_frame(appHandle);
-  } else {
-    initFinished = finish_init(appHandle);
+  const currentTime = performance.now();
+  const elapsedTime = currentTime - lastTime;
+
+  if (elapsedTime >= 1000 / maxFrameRate) {
+    // 执行渲染的帧循环
+    worker.postMessage({ ty: "enterFrame" });
+
+    lastTime = currentTime;
   }
   requestAnimationFrame(enterFrame);
 }

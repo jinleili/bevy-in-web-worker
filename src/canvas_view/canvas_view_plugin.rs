@@ -1,4 +1,4 @@
-use crate::{canvas::*, CanvasViews};
+use super::{canvas::*, CanvasViews};
 use bevy::app::{App, Plugin};
 use bevy::ecs::{
     entity::Entity,
@@ -19,9 +19,9 @@ impl Plugin for CanvasViewPlugin {
 
 #[allow(clippy::type_complexity)]
 pub fn create_canvas_window(app: &mut App) {
-    let canvas = app
+    let view_obj = app
         .world_mut()
-        .remove_non_send_resource::<Canvas>()
+        .remove_non_send_resource::<ViewObj>()
         .unwrap();
 
     let mut create_window_system_state: SystemState<(
@@ -38,18 +38,32 @@ pub fn create_canvas_window(app: &mut App) {
             continue;
         }
 
-        let app_view = canvas_views.create_window(canvas, entity);
-        let logical_res = app_view.logical_resolution();
+        let app_view = canvas_views.create_window(view_obj, entity);
+        let (logical_res, scale_factor) = match app_view {
+            ViewObj::Canvas(canvas) => (canvas.logical_resolution(), canvas.scale_factor),
+            ViewObj::Offscreen(offscreen) => {
+                (offscreen.logical_resolution(), offscreen.scale_factor)
+            }
+        };
 
         // Update resolution of bevy window
-        window
-            .resolution
-            .set_scale_factor(app_view.scale_factor as f32);
+        window.resolution.set_scale_factor(scale_factor as f32);
         window.resolution.set(logical_res.0, logical_res.1);
 
+        let (window_handle, display_handle) = match app_view {
+            ViewObj::Canvas(app_view) => (
+                app_view.window_handle().unwrap().as_raw(),
+                app_view.display_handle().unwrap().as_raw(),
+            ),
+            ViewObj::Offscreen(app_view) => (
+                app_view.window_handle().unwrap().as_raw(),
+                app_view.display_handle().unwrap().as_raw(),
+            ),
+        };
+
         commands.entity(entity).insert(RawHandleWrapper {
-            window_handle: app_view.window_handle().unwrap().as_raw(),
-            display_handle: app_view.display_handle().unwrap().as_raw(),
+            window_handle,
+            display_handle,
         });
 
         created_window_events.send(WindowCreated { window: entity });

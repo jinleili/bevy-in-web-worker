@@ -6,7 +6,8 @@ RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build --no-default-features --profil
 # Generate bindings
 for i in target/wasm32-unknown-unknown/wasm-release/*.wasm;
 do
-    wasm-bindgen --no-typescript --out-dir wasm --web "$i";
+    # wasm-bindgen --no-typescript --out-dir wasm --web "$i";
+    wasm-bindgen --no-typescript --out-dir wasm --target no-modules "$i";
 done
 
 # 优化 wasm 包大小
