@@ -1,0 +1,48 @@
+[package]
+name = "bevy-in-web-worker"
+description = "bevy +  web worker"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.78"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+raw-window-handle = "0.6.0"
+wgpu = "0.19.3"
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "f1db525f143ca88a37b26158a43a978d04a8859a", features = [
+    "bevy_pbr",
+    "bevy_ui",
+    "tonemapping_luts",
+    "webgpu",
+], default-features = false }
+uuid = { version = "1.7.0", features = ["v4"] }
+# Web only
+wasm-bindgen = "0.2.92"
+wasm-bindgen-futures = "0.4.42"
+console_error_panic_hook = "0.1.7"
+console_log = "1.0.0"
+web-sys = { version = "0.3.67", features = [
+    "Window",
+    "Document",
+    "Element",
+    "HtmlCanvasElement",
+    "OffscreenCanvas",
+    "MouseEvent",
+    "Worker",
+    "DedicatedWorkerGlobalScope",
+    "Event",
+    "MessageEvent",
+    "Blob",
+    "BlobPropertyBag",
+    "Url",
+] }
+js-sys = "0.3.69"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
+# lto = true
+codegen-units = 1

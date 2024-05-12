@@ -1,0 +1,15 @@
+target/
+wasm/*
+public/bevy_in_web_worker_bg.wasm
+public/bevy_in_web_worker.js
+
+debug.xcodeproj/
+
+.DS_Store
+
+# 排除根目录之外的 lock 文件
+*/Cargo.lock
+
+# IDE/Editor configuration files
+.vscode
+.idea
