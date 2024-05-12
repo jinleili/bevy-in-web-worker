@@ -13,7 +13,14 @@ pub struct CanvasViewPlugin;
 
 impl Plugin for CanvasViewPlugin {
     fn build(&self, app: &mut App) {
-        app.init_non_send_resource::<CanvasViews>();
+        app.init_non_send_resource::<CanvasViews>().add_systems(
+            bevy::app::Last,
+            (
+                changed_window.ambiguous_with(exit_on_all_closed),
+                // Update the state of the window before attempting to despawn to ensure consistent event ordering
+                despawn_window.after(changed_window),
+            ),
+        );
     }
 }
 
@@ -70,4 +77,26 @@ pub fn create_canvas_window(app: &mut App) {
         break;
     }
     create_window_system_state.apply(app.world_mut());
+}
+
+pub(crate) fn despawn_window(
+    mut closed: RemovedComponents<Window>,
+    window_entities: Query<&Window>,
+    mut close_events: EventWriter<WindowClosed>,
+    mut app_views: NonSendMut<CanvasViews>,
+) {
+    for entity in closed.read() {
+        crate::web_ffi::log("Closing window {:?entity}");
+        if !window_entities.contains(entity) {
+            app_views.remove_view(entity);
+            close_events.send(WindowClosed { window: entity });
+        }
+    }
+}
+
+pub(crate) fn changed_window(
+    mut _changed_windows: Query<(Entity, &mut Window), Changed<Window>>,
+    _app_views: NonSendMut<CanvasViews>,
+) {
+    // TODO:
 }

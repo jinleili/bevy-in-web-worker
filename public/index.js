@@ -46,18 +46,16 @@ function delayExecute(fn, delay = 50) {
 }
 
 function launch() {
-  window.onresize = window_resized;
-  window.dispatch_resize_event = dispatch_resize_event;
-  window.canvas_resize_completed = canvas_resize_completed;
-
   if ("navigator" in window && "gpu" in navigator) {
     navigator.gpu
       .requestAdapter()
       .then((_adapter) => {
+        resizeCanvas();
         // 浏览器支持 WebGPU
         createAppWindow();
       })
       .catch((_error) => {
+        console.log(_error);
         showAlert();
       });
   } else {
@@ -65,46 +63,12 @@ function launch() {
     showAlert();
   }
 }
+launch();
 
-function window_resized() {
-  clearTimeout(this.timeOutFunctionId);
-  if (this.can_resize_canvas || this.missedResizeCount > 10) {
-    this.missedResizeCount = 0;
-    this.timeOutFunctionId = setTimeout(this.dispatch_resize_event, 100);
-  } else {
-    // 等待 rust 端 resize 完成
-    this.missedResizeCount++;
-    this.timeOutFunctionId = setTimeout(this.window_resized, 100);
-  }
-}
-
-function showAlert() {
-  alert("请使用 Chrome 或者 Edge 113+ 浏览器版本");
-}
-
-let can_resize_canvas = false;
-function canvas_resize_completed() {
-  can_resize_canvas = true;
-}
-
-function dispatch_resize_event() {
-  can_resize_canvas = false;
-  let elem = document.getElementById("container");
-  let canvas = elem.getElementsByTagName("canvas")[0];
-  if (canvas != null) {
-    let ratio = window.devicePixelRatio;
-    canvas.width = elem.clientWidth * ratio;
-    canvas.height = elem.clientHeight * ratio;
-    canvas.style.width = elem.clientWidth + "px";
-    canvas.style.height = elem.clientHeight + "px";
-    canvas.style.maxWidth = elem.clientWidth + "px";
-    canvas.style.maxHeight = elem.clientHeight + "px";
-  }
-}
-
+// 由于 render 装进了 worker 线程，requestAnimationFrame 的频率可能太高，需要有限制策略
 let lastTime = performance.now();
-let maxFrameRate = 90; // 最多每秒90帧
-
+let maxFrameRate = 60; // 最多每秒90帧
+let frameCount = 0;
 function enterFrame() {
   const currentTime = performance.now();
   const elapsedTime = currentTime - lastTime;
@@ -114,8 +78,23 @@ function enterFrame() {
     worker.postMessage({ ty: "enterFrame" });
 
     lastTime = currentTime;
+    frameCount++;
   }
   requestAnimationFrame(enterFrame);
 }
 
-launch();
+function showAlert() {
+  alert("请使用 Chrome 或者 Edge 113+ 浏览器版本");
+}
+
+function resizeCanvas() {
+  let elem = document.getElementById("container");
+  let canvas = document.getElementById("app-canvas");
+  let ratio = window.devicePixelRatio;
+  canvas.width = elem.clientWidth * ratio;
+  canvas.height = elem.clientHeight * ratio;
+  canvas.style.width = elem.clientWidth + "px";
+  canvas.style.height = elem.clientHeight + "px";
+  canvas.style.maxWidth = elem.clientWidth + "px";
+  canvas.style.maxHeight = elem.clientHeight + "px";
+}

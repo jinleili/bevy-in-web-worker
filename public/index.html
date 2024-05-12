@@ -1,38 +1,44 @@
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <style>
-      body {
-        background: linear-gradient(
-          135deg,
+
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      background: linear-gradient(135deg,
           white 0%,
           white 49%,
           black 49%,
           black 51%,
           white 51%,
-          white 100%
-        ) repeat;
-        background-size: 20px 20px;
-      }
-      #container {
-        display: flex;
-        justify-content: center;
-        margin: 0 auto;
-        width: 800px;
-        height: 600px;
-      }
-      canvas {
-        background-color: white;
-      }
-    </style>
-    <title>Web Worker</title>
-  </head>
-  
-  <body>
-    <div id="container">
-      <canvas id="app-canvas"/>
-    </div>
-    <script type="module" src="./index.js"></script>
-  </body>
+          white 100%) repeat;
+      background-size: 20px 20px;
+    }
+
+    #container {
+      display: flex;
+      justify-content: center;
+      margin: 0 auto;
+      width: 800px;
+      height: 600px;
+      padding: 0px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      margin: 0px;
+      background-color: white;
+    }
+  </style>
+  <title>Web Worker</title>
+</head>
+
+<body>
+  <div id="container">
+    <canvas id="app-canvas" raw-window-handle="1" />
+  </div>
+  <script type="module" src="./index.js"></script>
+</body>
 
 </html>

@@ -62,10 +62,21 @@ async function initApp(offscreenCanvas, devicePixelRatio) {
 }
 
 // 开始渲染帧
+// TODO: 前 3 帧之间先等待 1 秒
+let isLastFrameCompleted = 1;
+let frameIndex = 0;
+let frameCount = 0;
 function enterFrame() {
   // 当 app 准备好时，执行 app 的帧循环
-  if (initFinished > 0) {
-    enter_frame(appHandle);
+  if (initFinished > 0 && isLastFrameCompleted > 0) {
+    if (frameIndex >= 3 || (frameIndex < 3 && frameCount % 60 == 0)) {
+      isLastFrameCompleted = 0;
+      isLastFrameCompleted = enter_frame(appHandle);
+      console.log(frameIndex, frameCount);
+      isFirstFrame = false;
+      frameIndex++;
+    }
+    frameCount++;
   } else {
     initFinished = finish_init(appHandle);
   }

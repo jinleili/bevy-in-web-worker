@@ -1,4 +1,4 @@
-use crate::bevy_app::{animate_materials, setup};
+use crate::bevy_app::init_app;
 use crate::{canvas::*, canvas_view, create_canvas_window};
 use bevy::app::PluginsState;
 use bevy::prelude::*;
@@ -16,13 +16,9 @@ extern "C" {
 
 #[wasm_bindgen]
 pub fn init_bevy_app() -> u64 {
-    let mut app = App::new();
-    app.add_plugins(DefaultPlugins);
+    let mut app = init_app();
     // 添加自定义的 canvas 窗口插件
     app.add_plugins(canvas_view::CanvasViewPlugin);
-
-    app.add_systems(Startup, setup)
-        .add_systems(Update, animate_materials);
 
     info!("init_bevy_app");
 
@@ -40,6 +36,7 @@ pub fn create_window_by_canvas(ptr: u64) {
     // let offscreen_canvas = OffscreenCanvas::from(&canvas);
     // let view_obj = ViewObj::Offscreen(offscreen_canvas);
     app.insert_non_send_resource(view_obj);
+
     create_canvas_window(app);
 }
 
@@ -55,14 +52,16 @@ pub fn create_window_by_offscreen_canvas(
     let offscreen_canvas = OffscreenCanvas::new(canvas, scale_factor, 1);
     let view_obj = ViewObj::Offscreen(offscreen_canvas);
     app.insert_non_send_resource(view_obj);
+
     create_canvas_window(app);
 }
 
+/// 完成插件初始化
+/// 初始化未完成之前不能调用帧绘制
 #[wasm_bindgen]
 pub fn finish_init(ptr: u64) -> u32 {
     let app = unsafe { &mut *(ptr as *mut App) };
 
-    // 完成插件初始化
     // 创建 device/queue 是异步的，不确定创建完成的时机
     if app.plugins_state() == PluginsState::Ready {
         app.finish();
@@ -73,9 +72,13 @@ pub fn finish_init(ptr: u64) -> u32 {
     0
 }
 
+/// 帧绘制
+/// 返回一个非 0 标记，表示当前帧的 cpu 端指令已执行完
+/// render 运行在 worker 中时，主线程 post 绘制 msg 时可能 render 还没有完成当前帧的更新
+///
+/// TODO：需要检测帧依赖的资源是否已加载完成，否则可能提交的 update 累积会导致栈溢出
 #[wasm_bindgen]
-pub fn enter_frame(ptr: u64) {
-    info!("enter_frame");
+pub fn enter_frame(ptr: u64) -> i32 {
     // 获取到指针指代的 Rust 对象的可变借用
     let app = unsafe { &mut *(ptr as *mut App) };
 
@@ -90,4 +93,6 @@ pub fn enter_frame(ptr: u64) {
     } else {
         app.update();
     }
+
+    1
 }

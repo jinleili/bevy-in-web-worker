@@ -1,58 +1,123 @@
-use bevy::prelude::*;
+use std::f32::consts::PI;
 
-pub fn init_app() -> App {
+use bevy::{
+    color::palettes::basic::SILVER,
+    prelude::*,
+    render::{
+        render_asset::RenderAssetUsages,
+        render_resource::{Extent3d, TextureDimension, TextureFormat},
+    },
+};
+
+pub(crate) fn init_app() -> App {
     let mut app = App::new();
-
-    app.add_plugins(DefaultPlugins)
+    app.add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_systems(Startup, setup)
-        .add_systems(Update, animate_materials);
-
+        .add_systems(Update, rotate);
     app
 }
 
-pub fn run() {
-    init_app().run();
-}
+/// A marker component for our shapes so we can query them separately from the ground plane
+#[derive(Component)]
+struct Shape;
 
-pub(crate) fn setup(
+const X_EXTENT: f32 = 12.0;
+
+fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut images: ResMut<Assets<Image>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(3.0, 1.0, 3.0)
-            .looking_at(Vec3::new(0.0, -0.5, 0.0), Vec3::Y),
+    let debug_material = materials.add(StandardMaterial {
+        base_color_texture: Some(images.add(uv_debug_texture())),
         ..default()
     });
 
-    let cube = meshes.add(Cuboid::new(0.5, 0.5, 0.5));
+    let shapes = [
+        meshes.add(Cuboid::default()),
+        meshes.add(Capsule3d::default()),
+        meshes.add(Torus::default()),
+        meshes.add(Cylinder::default()),
+        meshes.add(Sphere::default().mesh().ico(5).unwrap()),
+        meshes.add(Sphere::default().mesh().uv(32, 18)),
+    ];
 
-    const GOLDEN_ANGLE: f32 = 137.507_77;
+    let num_shapes = shapes.len();
 
-    let mut hsla = Hsla::hsl(0.0, 1.0, 0.5);
-    for x in -1..2 {
-        for z in -1..2 {
-            commands.spawn(PbrBundle {
-                mesh: cube.clone(),
-                material: materials.add(Color::from(hsla)),
-                transform: Transform::from_translation(Vec3::new(x as f32, 0.0, z as f32)),
+    for (i, shape) in shapes.into_iter().enumerate() {
+        commands.spawn((
+            PbrBundle {
+                mesh: shape,
+                material: debug_material.clone(),
+                transform: Transform::from_xyz(
+                    -X_EXTENT / 2. + i as f32 / (num_shapes - 1) as f32 * X_EXTENT,
+                    2.0,
+                    0.0,
+                )
+                .with_rotation(Quat::from_rotation_x(-PI / 4.)),
                 ..default()
-            });
-            hsla = hsla.rotate_hue(GOLDEN_ANGLE);
-        }
+            },
+            Shape,
+        ));
+    }
+
+    commands.spawn(PointLightBundle {
+        point_light: PointLight {
+            shadows_enabled: true,
+            intensity: 10_000_000.,
+            range: 100.0,
+            shadow_depth_bias: 0.2,
+            ..default()
+        },
+        transform: Transform::from_xyz(8.0, 16.0, 8.0),
+        ..default()
+    });
+
+    // ground plane
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Plane3d::default().mesh().size(50.0, 50.0)),
+        material: materials.add(Color::from(SILVER)),
+        ..default()
+    });
+
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(0.0, 6., 12.0).looking_at(Vec3::new(0., 1., 0.), Vec3::Y),
+        ..default()
+    });
+}
+
+fn rotate(mut query: Query<&mut Transform, With<Shape>>, time: Res<Time>) {
+    for mut transform in &mut query {
+        transform.rotate_y(time.delta_seconds() / 2.);
     }
 }
 
-pub(crate) fn animate_materials(
-    material_handles: Query<&Handle<StandardMaterial>>,
-    time: Res<Time>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    for material_handle in material_handles.iter() {
-        if let Some(material) = materials.get_mut(material_handle) {
-            if let Color::Hsla(ref mut hsla) = material.base_color {
-                *hsla = hsla.rotate_hue(time.delta_seconds() * 100.0);
-            }
-        }
+/// Creates a colorful test pattern
+fn uv_debug_texture() -> Image {
+    const TEXTURE_SIZE: usize = 8;
+
+    let mut palette: [u8; 32] = [
+        255, 102, 159, 255, 255, 159, 102, 255, 236, 255, 102, 255, 121, 255, 102, 255, 102, 255,
+        198, 255, 102, 198, 255, 255, 121, 102, 255, 255, 236, 102, 255, 255,
+    ];
+
+    let mut texture_data = [0; TEXTURE_SIZE * TEXTURE_SIZE * 4];
+    for y in 0..TEXTURE_SIZE {
+        let offset = TEXTURE_SIZE * y * 4;
+        texture_data[offset..(offset + TEXTURE_SIZE * 4)].copy_from_slice(&palette);
+        palette.rotate_right(4);
     }
+
+    Image::new_fill(
+        Extent3d {
+            width: TEXTURE_SIZE as u32,
+            height: TEXTURE_SIZE as u32,
+            depth_or_array_layers: 1,
+        },
+        TextureDimension::D2,
+        &texture_data,
+        TextureFormat::Rgba8UnormSrgb,
+        RenderAssetUsages::RENDER_WORLD,
+    )
 }

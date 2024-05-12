@@ -7,6 +7,7 @@ pub enum ViewObj {
     Canvas(Canvas),
     Offscreen(OffscreenCanvas),
 }
+
 #[derive(Debug, Clone)]
 pub struct Canvas {
     element: web_sys::HtmlCanvasElement,
@@ -14,6 +15,7 @@ pub struct Canvas {
     handle: u32,
 }
 
+#[allow(dead_code)]
 impl Canvas {
     pub fn new(selectors: &str, handle: u32) -> Self {
         // 0 is reserved for window itself.
@@ -97,6 +99,7 @@ pub struct OffscreenCanvas {
     handle: u32,
 }
 
+#[allow(dead_code)]
 impl OffscreenCanvas {
     pub const fn new(canvas: web_sys::OffscreenCanvas, scale_factor: f32, handle: u32) -> Self {
         Self {
