@@ -16,12 +16,12 @@ bevy = { git = "https://github.com/bevyengine/bevy", rev = "f1db525f143ca88a37b2
     # bevy = { version = "0.13.2", features = [
     "bevy_pbr",
     "bevy_ui",
-    "tonemapping_luts",
+    "bevy_sprite",
     "bevy_gizmos",
     "ktx2",
+    "tonemapping_luts",
     "webgpu",
 ], default-features = false }
-# bevy_mod_picking = "0.18.2"
 uuid = { version = "1.7.0", features = ["v4"] }
 rand = "0.8"
 # Web only

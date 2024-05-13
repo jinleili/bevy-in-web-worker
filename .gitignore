@@ -2,7 +2,7 @@ target/
 wasm/*
 public/bevy_in_web_worker_bg.wasm
 public/bevy_in_web_worker.js
-
+bevy_mod_raycast/
 debug.xcodeproj/
 
 .DS_Store

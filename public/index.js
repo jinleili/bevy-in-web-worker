@@ -9,6 +9,7 @@ worker.onmessage = async (event) => {
   switch (data.ty) {
     case "workerIsReady":
       workerIsReady = true;
+      addMouseEventObserver();
       break;
     default:
       break;
@@ -27,8 +28,6 @@ function createAppWindow() {
         { ty: "init", canvas: offscreenCanvas, devicePixelRatio },
         [offscreenCanvas]
       );
-
-      enterFrame();
 
       return true;
     }
@@ -65,24 +64,6 @@ function launch() {
 }
 launch();
 
-// 由于 render 装进了 worker 线程，requestAnimationFrame 的频率可能太高，需要有限制策略
-let lastTime = performance.now();
-let maxFrameRate = 60; // 最多每秒90帧
-let frameCount = 0;
-function enterFrame() {
-  const currentTime = performance.now();
-  const elapsedTime = currentTime - lastTime;
-
-  if (elapsedTime >= 1000 / maxFrameRate) {
-    // 执行渲染的帧循环
-    worker.postMessage({ ty: "enterFrame" });
-
-    lastTime = currentTime;
-    frameCount++;
-  }
-  requestAnimationFrame(enterFrame);
-}
-
 function showAlert() {
   alert("请使用 Chrome 或者 Edge 113+ 浏览器版本");
 }
@@ -97,4 +78,12 @@ function resizeCanvas() {
   canvas.style.height = elem.clientHeight + "px";
   canvas.style.maxWidth = elem.clientWidth + "px";
   canvas.style.maxHeight = elem.clientHeight + "px";
+}
+
+// 添加鼠标事件监听
+function addMouseEventObserver() {
+  let container = document.getElementById("container");
+  container.addEventListener("mousemove", function (event) {
+    worker.postMessage({ ty: "mousemove", x: event.offsetX, y: event.offsetY });
+  });
 }
