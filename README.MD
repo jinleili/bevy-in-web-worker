@@ -1,22 +1,25 @@
 # Bevy-in-Web-Worker
 
-## 安装 Rust 环境
+Engine 放进 Web Worker 后与主线程交互的通信时延与性能验证
 
-#### 在 Linux 或 macOS 上安装
+**验证点：**
 
-```sh
-$ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
-```
+1. 主线程与 Worker 之间事件通信成本是否会很高。
+2. 异步的 pick 接口是否会导致用户交互体验变差。
+3. 主线程阻塞对 事件/ worker 的影响。
 
-#### 在 Windows 上安装
+**针对上面验证点的设计：**
 
-[https://course.rs/first-try/installation.html#在-windows-上安装-rustup](https://course.rs/first-try/installation.html#在-windows-上安装-rustup)
+1. 不对鼠标事件触发频率做任何 **Throttle**, 每一个 mousemove 事件都会发送给 worker, 由 worker 执行一次 ray pick 后将结果发回给主线程;
+2. 设计了高交互复杂度 **选中/高亮** 逻辑：
+    1. 主线程 postMsg 给 worker -> 
+    2. worker 转交任务给 engine 执行 ray pick -> 
+    3. 将结果从 engine 发给 worker -> 
+    4. 由 worker postMsg 给主线程 -> 
+    5. 主线程再 postMsg 给 worker 执行需要的 **选中/高亮**
+3. 模拟了主线程阻塞的场景，可以控制单帧阻塞时长，同时左上角有一个**主线程卡顿指示器**便于观察阻塞结果
 
-## 安装 VSCode 插件（查看源码时才需要）
-
-- rust-analyzer
-
-## 浏览器端运行
+## 代码运行
 
 ```sh
 # 编译 WASM：
