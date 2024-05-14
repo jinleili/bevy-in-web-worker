@@ -32,7 +32,7 @@
       display: block;
       margin: 0 auto;
       padding: 0px;
-      width: 1000px;
+      width: 1200px;
     }
 
     #nav {
@@ -41,12 +41,20 @@
     }
 
     #container {
+      display: flex;
       position: relative;
       width: 100%;
-      height: 750px;
+      height: 600px;
+    }
+
+    #container div {
+      width: 50%;
+      height: 100%;
     }
 
     canvas {
+      width: 100%;
+      height: 100%;
       display: block;
       background-color: gainsboro;
     }
@@ -61,7 +69,6 @@
     .child {
       flex: 1;
       height: 33px;
-      margin-right: 5px;
     }
 
     #loading {
@@ -108,8 +115,18 @@
         <button id="stop-jank">停止阻塞</button>
       </div>
     </div>
+
+    <div style="display:flex; height: 33px; font-weight: 500; text-align: center;">
+      <div class="child" style="color: crimson; line-height: 33px; background-color:darkgray;">主线程 renderer</div>
+      <div class="child" style="color:forestgreen;line-height: 33px; background-color:azure;">Woker 线程 renderer</div>
+    </div>
     <div id="container">
-      <canvas id="app-canvas" raw-window-handle="1" />
+      <div id="main-thread-container">
+        <canvas id="main-thread-canvas" raw-window-handle="1"></canvas>
+      </div>
+      <div id="worker-thread-container">
+        <canvas id="worker-thread-canvas" raw-window-handle="2"></canvas>
+      </div>
     </div>
 
     <div id="loading">Wasm 加载中，没开 VPN 的情况下可能会比较慢...</div>
@@ -131,7 +148,6 @@
 
     animate();
 
-
     // 模拟主线程阻塞
     let blockTime = 32;
     let needsStop = true;
@@ -143,7 +159,8 @@
 
       if (inputValue > 200) {
         alert('请输入 0 到 200 之间的数字');
-        numberInput.value = '';
+        numberInput.value = '32';
+        blockTime = 32;
       } else {
         blockTime = inputValue;
       }

@@ -8,11 +8,14 @@ RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build --no-default-features \
 # Generate bindings
 for i in target/wasm32-unknown-unknown/debug/*.wasm;
 do
-    # wasm-bindgen --no-typescript --target no-modules --out-dir wasm --web "$i";
-    wasm-bindgen --no-typescript --out-dir wasm --target no-modules "$i";
+    wasm-bindgen --no-typescript --out-dir wasm --web "$i";
+    # Worker 中加载的脚本无法使用 ES6 module
+    wasm-bindgen --no-typescript --out-dir wasm-no-modules --target no-modules "$i";
 done
 
-cp wasm/bevy_in_web_worker.js public/bevy_in_web_worker.js
+cp wasm/bevy_in_web_worker.js public/bevy_in_main_thread.js
+cp wasm-no-modules/bevy_in_web_worker.js public/bevy_in_web_worker.js
+# 两份 js 共用同一个 wasm
 cp wasm/bevy_in_web_worker_bg.wasm public/bevy_in_web_worker_bg.wasm
 
 basic-http-server public

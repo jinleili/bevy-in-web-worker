@@ -1,5 +1,6 @@
 target/
 wasm/*
+wasm-no-modules/*
 public/bevy_in_web_worker_bg.wasm
 public/bevy_in_web_worker.js
 bevy_mod_raycast/

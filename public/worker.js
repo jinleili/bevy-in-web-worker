@@ -4,7 +4,6 @@ importScripts("./bevy_in_web_worker.js");
 const {
   init_bevy_app,
   is_preparation_completed,
-  create_window_by_canvas,
   create_window_by_offscreen_canvas,
   enter_frame,
   mouse_move,
@@ -28,7 +27,7 @@ async function init_wasm_in_worker() {
     switch (data.ty) {
       case "init":
         let canvas = data.canvas;
-        createAppWindow(canvas, data.devicePixelRatio);
+        createWorkerAppWindow(canvas, data.devicePixelRatio);
         break;
 
       case "mousemove":
@@ -55,7 +54,7 @@ async function init_wasm_in_worker() {
 }
 init_wasm_in_worker();
 
-function createAppWindow(offscreenCanvas, devicePixelRatio) {
+function createWorkerAppWindow(offscreenCanvas, devicePixelRatio) {
   // 创建渲染窗口
   create_window_by_offscreen_canvas(
     appHandle,
@@ -106,6 +105,6 @@ function getPreparationState() {
 }
 
 /** 发送 ray pick 结果 */
-function send_pick_from_rust(pickList) {
+function send_pick_from_worker(pickList) {
   self.postMessage({ ty: "pick", list: pickList });
 }

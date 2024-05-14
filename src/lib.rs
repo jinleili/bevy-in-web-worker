@@ -44,4 +44,6 @@ impl WorkerApp {
 pub(crate) struct ActiveInfo {
     pub(crate) hover: HashMap<Entity, u64>,
     pub(crate) selection: HashMap<Entity, u64>,
+    // 是否运行在 worker 中
+    pub(crate) is_in_worker: bool,
 }

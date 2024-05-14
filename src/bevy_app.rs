@@ -1,4 +1,4 @@
-use crate::{send_pick_from_rust, ActiveInfo, WorkerApp};
+use crate::{send_pick_from_rust, send_pick_from_worker, ActiveInfo, WorkerApp};
 use bevy::color::palettes::css::BLANCHED_ALMOND;
 use bevy::color::palettes::tailwind::BLUE_400;
 use bevy::input::mouse::MouseWheel;
@@ -258,6 +258,7 @@ fn ray_from_screenspace(
 fn mouse_events_system(
     mut cursor_moved_events: EventReader<CursorMoved>,
     mut mouse_wheel_events: EventReader<MouseWheel>,
+    app_info: Res<ActiveInfo>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     mut query: Query<(Entity, &CurrentVolume), With<ActiveState>>,
 ) {
@@ -290,7 +291,11 @@ fn mouse_events_system(
         for (_, &item) in list.iter() {
             js_array.push(&JsValue::from(item));
         }
-        send_pick_from_rust(js_array);
+        if app_info.is_in_worker {
+            send_pick_from_worker(js_array);
+        } else {
+            send_pick_from_rust(js_array);
+        }
     }
 
     // TODO: mouse wheel

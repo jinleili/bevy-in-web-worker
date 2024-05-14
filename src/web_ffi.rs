@@ -15,7 +15,11 @@ extern "C" {
     pub(crate) fn log(s: &str);
 
     // 发送 pick 列表
+    // 从 worker 环境发送
     #[wasm_bindgen(js_namespace = self)]
+    pub(crate) fn send_pick_from_worker(list: js_sys::Array);
+    // 从主线程环境发送
+    #[wasm_bindgen(js_namespace = window)]
     pub(crate) fn send_pick_from_rust(list: js_sys::Array);
 }
 
@@ -33,13 +37,15 @@ pub fn init_bevy_app() -> u64 {
 
 // 创建 Canvas 窗口
 #[wasm_bindgen]
-pub fn create_window_by_canvas(ptr: u64) {
+pub fn create_window_by_canvas(ptr: u64, canvas_id: &str, scale_factor: f32) {
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
+    app.scale_factor = scale_factor;
+
     // 完成自定义 canvas 窗口的创建
-    let canvas = Canvas::new("app-canvas", 1);
+    let canvas = Canvas::new(canvas_id, 1);
     let view_obj = ViewObj::Canvas(canvas);
 
-    create_window(app, view_obj);
+    create_window(app, view_obj, false);
 }
 
 /// 创建离屏窗口
@@ -55,14 +61,16 @@ pub fn create_window_by_offscreen_canvas(
     let offscreen_canvas = OffscreenCanvas::new(canvas, scale_factor, 1);
     let view_obj = ViewObj::Offscreen(offscreen_canvas);
 
-    create_window(app, view_obj);
+    create_window(app, view_obj, true);
 }
 
-fn create_window(app: &mut WorkerApp, view_obj: ViewObj) {
+fn create_window(app: &mut WorkerApp, view_obj: ViewObj, is_in_worker: bool) {
     app.insert_non_send_resource(view_obj);
 
+    let mut info = ActiveInfo::default();
+    info.is_in_worker = is_in_worker;
     // 选中/高亮 资源
-    app.insert_resource(ActiveInfo::default());
+    app.insert_resource(info);
 
     create_canvas_window(app);
 }
@@ -112,7 +120,6 @@ pub fn set_hover(ptr: u64, arr: js_sys::Array) {
     // 将 js hover 列表转换为 rust 对象
     let hover = to_map(arr);
 
-    info!("set_hover: {:?}", &hover);
     // 更新 hover 数据
     active_info.hover = hover;
 }
