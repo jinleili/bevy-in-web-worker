@@ -3,14 +3,32 @@ const worker = new Worker("./worker.js");
 // worker 是否准备就绪
 let workerIsReady = false;
 
+// 最新的 pick 结果
+let latestPick = [];
+
 // 监听 worker 发来的消息
 worker.onmessage = async (event) => {
   let data = event.data;
+
   switch (data.ty) {
     case "workerIsReady":
       workerIsReady = true;
       addMouseEventObserver();
       break;
+
+    case "pick":
+      // 依赖 pick 的其他业务逻辑
+      // ...
+
+      // 在网页上显示 pick 结果
+      let ele = document.getElementById("pick-list");
+      ele.innerText = data.list;
+
+      latestPick = data.list;
+      // 通知 worker 哪些 entity 启用 hover 效果
+      worker.postMessage({ ty: "hover", list: latestPick });
+      break;
+
     default:
       break;
   }
@@ -20,6 +38,9 @@ worker.onmessage = async (event) => {
 function createAppWindow() {
   delayExecute(() => {
     if (workerIsReady) {
+      let loading = document.getElementById("loading");
+      loading.style.display = "none";
+
       // 创建渲染窗口
       let canvas = document.getElementById("app-canvas");
       let offscreenCanvas = canvas.transferControlToOffscreen();
@@ -84,6 +105,18 @@ function resizeCanvas() {
 function addMouseEventObserver() {
   let container = document.getElementById("container");
   container.addEventListener("mousemove", function (event) {
+    // 在将 mouse move 事件发送给 worker 之前，清空上次的 pick 缓存
+    latestPick = [];
+
     worker.postMessage({ ty: "mousemove", x: event.offsetX, y: event.offsetY });
+  });
+
+  container.addEventListener("click", function (event) {
+    if (Array.isArray(latestPick) && latestPick.length > 0) {
+      worker.postMessage({
+        ty: "select",
+        list: latestPick,
+      });
+    }
   });
 }

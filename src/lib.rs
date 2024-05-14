@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use std::ops::{Deref, DerefMut};
 
 mod web_ffi;
@@ -38,4 +38,10 @@ impl WorkerApp {
             scale_factor: 1.0,
         }
     }
+}
+
+#[derive(Debug, Default, Resource)]
+pub(crate) struct ActiveInfo {
+    pub(crate) hover: HashMap<Entity, u64>,
+    pub(crate) selection: HashMap<Entity, u64>,
 }

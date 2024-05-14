@@ -4,10 +4,12 @@ importScripts("./bevy_in_web_worker.js");
 const {
   init_bevy_app,
   is_preparation_completed,
-  enter_frame,
   create_window_by_canvas,
   create_window_by_offscreen_canvas,
+  enter_frame,
   mouse_move,
+  set_hover,
+  set_selection,
 } = wasm_bindgen;
 
 let appHandle = 0;
@@ -28,9 +30,21 @@ async function init_wasm_in_worker() {
         let canvas = data.canvas;
         createAppWindow(canvas, data.devicePixelRatio);
         break;
+
       case "mousemove":
         mouse_move(appHandle, data.x, data.y);
         break;
+
+      case "hover":
+        // 设置 hover（高亮） 效果
+        set_hover(appHandle, data.list);
+        break;
+
+      case "select":
+        // 设置 选中 效果
+        set_selection(appHandle, data.list);
+        break;
+
       default:
         break;
     }
@@ -89,4 +103,9 @@ function enterFrame(_dt) {
 /** 获取 bevy app 就绪状态 */
 function getPreparationState() {
   initFinished = is_preparation_completed(appHandle);
+}
+
+/** 发送 ray pick 结果 */
+function send_pick_from_rust(pickList) {
+  self.postMessage({ ty: "pick", list: pickList });
 }

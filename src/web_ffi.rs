@@ -1,8 +1,10 @@
 use crate::bevy_app::init_app;
-use crate::{canvas::*, canvas_view, create_canvas_window, WorkerApp};
+use crate::{canvas::*, canvas_view, create_canvas_window, ActiveInfo, WorkerApp};
 use bevy::app::PluginsState;
 use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
+use js_sys::BigInt;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -11,6 +13,10 @@ extern "C" {
     // 在 app 初始化完成前，info! 无法使用，打印日志得用它
     #[wasm_bindgen(js_namespace = console)]
     pub(crate) fn log(s: &str);
+
+    // 发送 pick 列表
+    #[wasm_bindgen(js_namespace = self)]
+    pub(crate) fn send_pick_from_rust(list: js_sys::Array);
 }
 
 #[wasm_bindgen]
@@ -32,11 +38,8 @@ pub fn create_window_by_canvas(ptr: u64) {
     // 完成自定义 canvas 窗口的创建
     let canvas = Canvas::new("app-canvas", 1);
     let view_obj = ViewObj::Canvas(canvas);
-    // let offscreen_canvas = OffscreenCanvas::from(&canvas);
-    // let view_obj = ViewObj::Offscreen(offscreen_canvas);
-    app.insert_non_send_resource(view_obj);
 
-    create_canvas_window(app);
+    create_window(app, view_obj);
 }
 
 /// 创建离屏窗口
@@ -51,7 +54,15 @@ pub fn create_window_by_offscreen_canvas(
 
     let offscreen_canvas = OffscreenCanvas::new(canvas, scale_factor, 1);
     let view_obj = ViewObj::Offscreen(offscreen_canvas);
+
+    create_window(app, view_obj);
+}
+
+fn create_window(app: &mut WorkerApp, view_obj: ViewObj) {
     app.insert_non_send_resource(view_obj);
+
+    // 选中/高亮 资源
+    app.insert_resource(ActiveInfo::default());
 
     create_canvas_window(app);
 }
@@ -92,6 +103,32 @@ pub fn mouse_move(ptr: u64, x: f32, y: f32) {
     app.world_mut().send_event(cursor_move);
 }
 
+/// 设置 hover（高亮） 效果
+#[wasm_bindgen]
+pub fn set_hover(ptr: u64, arr: js_sys::Array) {
+    let app = unsafe { &mut *(ptr as *mut WorkerApp) };
+    let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
+
+    // 将 js hover 列表转换为 rust 对象
+    let hover = to_map(arr);
+
+    info!("set_hover: {:?}", &hover);
+    // 更新 hover 数据
+    active_info.hover = hover;
+}
+
+#[wasm_bindgen]
+pub fn set_selection(ptr: u64, arr: js_sys::Array) {
+    let app = unsafe { &mut *(ptr as *mut WorkerApp) };
+    let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
+
+    // 将 js selection 列表转换为 rust 对象
+    let selection = to_map(arr);
+
+    // 更新 hover 数据
+    active_info.selection = selection;
+}
+
 /// 帧绘制
 /// render 运行在 worker 中时，主线程 post 绘制 msg 时可能 render 还没有完成当前帧的更新
 ///
@@ -112,4 +149,32 @@ pub fn enter_frame(ptr: u64) {
     } else {
         app.update();
     }
+}
+
+/// 将 js 数组转换为 rust HashMap
+fn to_map(arr: js_sys::Array) -> HashMap<Entity, u64> {
+    let mut map: HashMap<Entity, u64> = HashMap::new();
+    let length = arr.length();
+    for i in 0..length {
+        let value = bigint_to_u64(arr.get(i));
+        if let Ok(v) = value {
+            let entity = Entity::from_bits(v);
+            map.insert(entity, v);
+        }
+    }
+    map
+}
+
+/// 将 js BigInt 转换成 rust u64
+/// 测试了几种方式，只有下边的能方式转换成功
+fn bigint_to_u64(value: JsValue) -> Result<u64, JsValue> {
+    if let Ok(big_int) = BigInt::new(&value) {
+        // 转换为字符串，基数为10
+        let big_int_str = big_int.to_string(10).unwrap().as_string();
+        let big_int_u64: Result<u64, _> = big_int_str.unwrap().parse::<u64>();
+        if let Ok(number) = big_int_u64 {
+            return Ok(number);
+        }
+    }
+    return Err(JsValue::from_str("Value is not a valid u64"));
 }

@@ -1,8 +1,8 @@
-use std::f32::consts::PI;
-
-use crate::WorkerApp;
+use crate::{send_pick_from_rust, ActiveInfo, WorkerApp};
 use bevy::color::palettes::css::BLANCHED_ALMOND;
+use bevy::color::palettes::tailwind::BLUE_400;
 use bevy::input::mouse::MouseWheel;
+use bevy::utils::hashbrown::HashMap;
 use bevy::{
     color::palettes::basic::SILVER,
     math::bounding::{Aabb3d, Bounded3d, RayCast3d},
@@ -13,6 +13,8 @@ use bevy::{
     },
 };
 use rand::Rng;
+use std::f32::consts::PI;
+use wasm_bindgen::JsValue;
 
 pub(crate) fn init_app() -> WorkerApp {
     let mut app = App::new();
@@ -28,7 +30,10 @@ pub(crate) fn init_app() -> WorkerApp {
     app.add_plugins(default_plugins);
 
     app.add_systems(Startup, setup)
-        .add_systems(Update, (rotate, update_aabbes, mouse_events_system))
+        .add_systems(
+            Update,
+            (rotate, update_aabbes, mouse_events_system, update_active),
+        )
         .add_systems(PostUpdate, render_active_shapes);
 
     WorkerApp::new(app)
@@ -160,11 +165,15 @@ fn rotate(mut query: Query<&mut Transform, With<Shape>>, time: Res<Time>) {
 
 /// 绘制 选中/高亮 包围盒
 fn render_active_shapes(mut gizmos: Gizmos, query: Query<(&Shape, &Transform, &ActiveState)>) {
-    let color = BLANCHED_ALMOND;
     for (shape, transform, active_state) in query.iter() {
         if !active_state.is_active() {
             continue;
         }
+        let color = if active_state.selected {
+            BLUE_400
+        } else {
+            BLANCHED_ALMOND
+        };
         let translation = transform.translation.xyz();
         match shape {
             Shape::Box(cuboid) => {
@@ -250,20 +259,48 @@ fn mouse_events_system(
     mut cursor_moved_events: EventReader<CursorMoved>,
     mut mouse_wheel_events: EventReader<MouseWheel>,
     cameras: Query<(&Camera, &GlobalTransform)>,
-    mut query: Query<(Entity, &CurrentVolume, &mut ActiveState)>,
+    mut query: Query<(Entity, &CurrentVolume), With<ActiveState>>,
 ) {
+    // hover 列表
+    // 鼠标事件的频率通常比 render 高，使用 HashMap 是为了避免 pick 结果有重复
+    let mut list: HashMap<Entity, u64> = HashMap::new();
+
     for event in cursor_moved_events.read() {
         let (camera, transform) = cameras.get_single().unwrap();
         let ray = ray_from_screenspace(event.position, camera, transform).unwrap();
         let ray_cast = RayCast3d::from_ray(ray, 30.);
         // 计算射线拾取
-        for (entity, volume, mut status) in query.iter_mut() {
+        for (entity, volume) in query.iter_mut() {
+            // 射线求交
             let toi = ray_cast.aabb_intersection_at(&volume.0);
-            status.hover = toi.is_some();
 
-            // 通知
+            // 刻意不在此时设置 hover，收集到所有 pick 到的 entity 发送给主线程，
+            // 由主线程决定需要 hover 的对象后再发送回对应的 entity
+            // status.hover = toi.is_some();
+
+            if toi.is_some() {
+                list.insert(entity, entity.to_bits());
+            }
         }
     }
 
+    if list.len() > 0 {
+        // 通知 js pick 结果
+        let js_array = js_sys::Array::new();
+        for (_, &item) in list.iter() {
+            js_array.push(&JsValue::from(item));
+        }
+        send_pick_from_rust(js_array);
+    }
+
+    // TODO: mouse wheel
     for _event in mouse_wheel_events.read() {}
+}
+
+/// 更新 选中/高亮
+fn update_active(active_info: ResMut<ActiveInfo>, mut query: Query<(Entity, &mut ActiveState)>) {
+    for (entity, mut status) in query.iter_mut() {
+        status.hover = active_info.hover.contains_key(&entity);
+        status.selected = active_info.selection.contains_key(&entity)
+    }
 }
