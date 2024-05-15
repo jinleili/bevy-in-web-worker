@@ -203,6 +203,14 @@ pub fn enter_frame(ptr: u64) {
     }
 }
 
+// 释放 engine 实例
+#[wasm_bindgen]
+pub fn release_app(ptr: u64) {
+    // 将指针转换为其指代的实际 Rust 对象，同时也拿回此对象的内存管理权
+    let app: Box<App> = unsafe { Box::from_raw(ptr as *mut _) };
+    crate::close_bevy_window(app);
+}
+
 /// 将 js 数组转换为 rust HashMap
 fn to_map(arr: js_sys::Array) -> HashMap<Entity, u64> {
     let mut map: HashMap<Entity, u64> = HashMap::new();

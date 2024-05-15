@@ -197,3 +197,19 @@ function block_from_rust() {
   window.blockMS(window.renderBlockTime);
 }
 window.block_from_rust = block_from_rust;
+
+window.blockWorkerRender = (dt) => {
+  worker.postMessage({ ty: "blockRender", blockTime: dt });
+};
+
+
+// 启动 engine 实例
+window.start_worker_app = () => {
+  worker.postMessage({ ty: "startRunning" });
+};
+
+// 停止 engine 实例
+window.stop_worker_app = () => {
+  worker.postMessage({ ty: "stopRunning" });
+};
+

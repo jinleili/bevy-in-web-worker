@@ -15,6 +15,7 @@ const {
 
 let appHandle = 0;
 let initFinished = 0;
+let isStoppedRunning = false;
 let renderBlockTime = 1;
 
 async function init_wasm_in_worker() {
@@ -31,6 +32,18 @@ async function init_wasm_in_worker() {
       case "init":
         let canvas = data.canvas;
         createWorkerAppWindow(canvas, data.devicePixelRatio);
+        break;
+
+      case "startRunning":
+        if (isStoppedRunning) {
+          isStoppedRunning = false;
+          // 开始帧循环
+          requestAnimationFrame(enterFrame);
+        }
+        break;
+
+      case "stopRunning":
+        isStoppedRunning = true;
         break;
 
       case "mousemove":
@@ -97,7 +110,8 @@ let frameCount = 0;
 let frameFlag = 0;
 
 function enterFrame(_dt) {
-  // console.log("enterFrame", frameIndex);
+  if (appHandle === 0 || isStoppedRunning) return;
+
   // 当 app 准备好时，执行 app 的帧循环
   if (initFinished > 0) {
     if (

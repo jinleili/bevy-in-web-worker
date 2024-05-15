@@ -36,7 +36,7 @@
     }
 
     #nav {
-      height: 184px;
+      height: 217px;
       width: 100%;
       background-color: #fafafa;
     }
@@ -121,13 +121,15 @@
 
       <!-- 模拟事件耗时 -->
       <div class="div33px">
-        添加主线程事件阻塞时间: <span>mousemove<input type="number" id="mousemoveBlockInput" class="numberInput" value="1" max="100" />ms</span>&nbsp;&nbsp;
+        添加主线程事件阻塞时间: <span>mousemove<input type="number" id="mousemoveBlockInput" class="numberInput" value="1"
+            max="100" />ms</span>&nbsp;&nbsp;
         <span>onmessage<input type="number" id="onmessageBlockInput" class="numberInput" value="1" max="100" />ms</span>
       </div>
 
       <div class="div33px">
         添加 Render 内阻塞时间: <span><input type="number" id="renderBlockInput" class="numberInput" value="1"
-            max="100" />ms</span> <span style="color: darkslategray;">&nbsp;&nbsp;(不区分主线程 / Woker，且没有考虑 Render 时本身要消耗的时间)</span>
+            max="100" />ms</span> <span style="color: darkslategray;">&nbsp;&nbsp;(不区分主线程 / Woker，且没有考虑 Render
+          时本身要消耗的时间)</span>
       </div>
 
       <div class="div33px">
@@ -135,6 +137,24 @@
 
         <button id="block">开始阻塞主线程</button>
         <button id="stop-block">停止阻塞</button>
+      </div>
+
+      <!-- 切换 Engine 实例与运行环境 -->
+      <div class="div33px">
+        <label>
+          <input type="radio" name="runTime" value="0" checked onchange="runTimeChanged(this)">
+          同时运行主线程及 Worker 实例&nbsp;&nbsp;
+        </label>
+
+        <label>
+          <input type="radio" name="runTime" value="1" onchange="runTimeChanged(this)">
+          仅运行主线程实例&nbsp;&nbsp;
+        </label>
+
+        <label>
+          <input type="radio" name="runTime" value="2" onchange="runTimeChanged(this)">
+          仅运行 Worker 线程实例
+        </label>
       </div>
     </div>
 
@@ -205,29 +225,29 @@
     });
 
     const onmessageBlockInput = document.getElementById('onmessageBlockInput');
-      onmessageBlockInput.addEventListener('input', function () {
-        let inputValue = parseInt(onmessageBlockInput.value);
-        if (inputValue > 100) {
-          alert('请输入 0 到 100 之间的数字');
-          onmessageBlockInput.value = '100';
-          window.onmessageBlockTime = 100;
-        } else {
-          window.onmessageBlockTime = inputValue;
-        }
+    onmessageBlockInput.addEventListener('input', function () {
+      let inputValue = parseInt(onmessageBlockInput.value);
+      if (inputValue > 100) {
+        alert('请输入 0 到 100 之间的数字');
+        onmessageBlockInput.value = '100';
+        window.onmessageBlockTime = 100;
+      } else {
+        window.onmessageBlockTime = inputValue;
+      }
     });
 
-  const renderBlockInput = document.getElementById('renderBlockInput');
-  renderBlockInput.addEventListener('input', function () {
-    let inputValue = parseInt(renderBlockInput.value);
-    if (inputValue > 100) {
-      alert('请输入 0 到 100 之间的数字');
-      renderBlockInput.value = '100';
-      inputValue = 100;
-    }
-    // 阻塞时间分别对两个 engine 实例生效
-    window.renderBlockTime = inputValue;
-    window.blockWorkerRender(inputValue);
-  });
+    const renderBlockInput = document.getElementById('renderBlockInput');
+    renderBlockInput.addEventListener('input', function () {
+      let inputValue = parseInt(renderBlockInput.value);
+      if (inputValue > 100) {
+        alert('请输入 0 到 100 之间的数字');
+        renderBlockInput.value = '100';
+        inputValue = 100;
+      }
+      // 阻塞时间分别对两个 engine 实例生效
+      window.renderBlockTime = inputValue;
+      window.blockWorkerRender(inputValue);
+    });
 
     document.getElementById("block").addEventListener("click", () => {
       needsStop = false;
@@ -253,6 +273,26 @@
     window.blockMS = (ms) => {
       const start = performance.now();
       while (performance.now() - start < ms) { }
+    }
+
+    // 切换 engine 运行实例
+    function runTimeChanged(radioBt) {
+      switch (radioBt.value) {
+        case "0":
+          if (window.start_main_app) window.start_main_app();
+          if (window.start_worker_app) window.start_worker_app();
+          break;
+
+        case "1":
+          if (window.start_main_app) window.start_main_app();
+          if (window.stop_worker_app) window.stop_worker_app();
+          break;
+
+        case "2":
+          if (window.start_worker_app) window.start_worker_app();
+          if (window.stop_main_app) window.stop_main_app();
+          break;
+      }
     }
   </script>
 </body>

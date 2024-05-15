@@ -8,15 +8,23 @@ import init, {
   left_bt_up,
   set_hover,
   set_selection,
+  release_app,
 } from "./bevy_in_main_thread.js";
 
 let appHandle = 0;
 let initFinished = 0;
+let isStoppedRunning = false;
 
 async function launchMainApp() {
   await init();
-  appHandle = init_bevy_app();
+  create_main_app();
+}
+launchMainApp();
 
+function create_main_app() {
+  if (appHandle > 0) return;
+
+  appHandle = init_bevy_app();
   // 创建渲染窗口
   let devicePixelRatio = window.devicePixelRatio;
   create_window_by_canvas(appHandle, "main-thread-canvas", devicePixelRatio);
@@ -24,7 +32,22 @@ async function launchMainApp() {
   // 开始动画
   requestAnimationFrame(enterFrame);
 }
-launchMainApp();
+
+// 启动 engine 实例
+window.start_main_app = () => {
+  isStoppedRunning = false;
+  requestAnimationFrame(enterFrame);
+};
+
+// 停止 engine 实例
+window.stop_main_app = () => {
+  //   release_app(appHandle);
+  //   // 重置状态
+  //   appHandle = 0;
+  //   initFinished = 0;
+  //   window.release_app = undefined;
+  isStoppedRunning = true;
+};
 
 window.mouse_move = (x, y) => {
   if (initFinished > 0) mouse_move(appHandle, x, y);
@@ -48,6 +71,8 @@ window.set_selection = (list) => {
 
 function enterFrame(_dt) {
   // 当 app 准备好时，执行 app 的帧循环
+  if (appHandle === 0 || isStoppedRunning) return;
+
   if (initFinished > 0) {
     enter_frame(appHandle);
   } else {

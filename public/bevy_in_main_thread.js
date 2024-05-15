@@ -314,6 +314,13 @@ export function enter_frame(ptr) {
     wasm.enter_frame(ptr);
 }
 
+/**
+* @param {bigint} ptr
+*/
+export function release_app(ptr) {
+    wasm.release_app(ptr);
+}
+
 function handleError(f, args) {
     try {
         return f.apply(this, args);
@@ -1283,11 +1290,11 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_executeBundles_0af360b832437e34 = function(arg0, arg1) {
         getObject(arg0).executeBundles(getObject(arg1));
     };
-    imports.wbg.__wbindgen_closure_wrapper30707 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper30708 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 2794, __wbg_adapter_30);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper31419 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper31420 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 2798, __wbg_adapter_30);
         return addHeapObject(ret);
     };
