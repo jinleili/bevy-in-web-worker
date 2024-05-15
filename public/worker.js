@@ -9,10 +9,12 @@ const {
   mouse_move,
   set_hover,
   set_selection,
+  set_block_time,
 } = wasm_bindgen;
 
 let appHandle = 0;
 let initFinished = 0;
+let renderBlockTime = 1;
 
 async function init_wasm_in_worker() {
   // 装载 wasm 文件
@@ -42,6 +44,10 @@ async function init_wasm_in_worker() {
       case "select":
         // 设置 选中 效果
         set_selection(appHandle, data.list);
+        break;
+
+      case "blockRender":
+        renderBlockTime = data.blockTime;
         break;
 
       default:
@@ -107,4 +113,10 @@ function getPreparationState() {
 /** 发送 ray pick 结果 */
 function send_pick_from_worker(pickList) {
   self.postMessage({ ty: "pick", list: pickList });
+}
+
+/** 执行阻塞 */
+function block_from_worker() {
+  const start = performance.now();
+  while (performance.now() - start < renderBlockTime) {}
 }

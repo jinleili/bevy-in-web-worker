@@ -1,5 +1,5 @@
 use crate::{send_pick_from_rust, send_pick_from_worker, ActiveInfo, WorkerApp};
-use bevy::color::palettes::css::BLANCHED_ALMOND;
+use bevy::color::palettes::css::{BLANCHED_ALMOND, GREEN};
 use bevy::color::palettes::tailwind::BLUE_400;
 use bevy::input::mouse::MouseWheel;
 use bevy::utils::hashbrown::HashMap;
@@ -65,7 +65,7 @@ impl ActiveState {
     }
 }
 
-const X_EXTENT: f32 = 19.0;
+const X_EXTENT: f32 = 15.0;
 
 fn setup(
     mut commands: Commands,
@@ -84,7 +84,6 @@ fn setup(
         meshes.add(Torus::default()),
         meshes.add(Cylinder::default()),
         meshes.add(Capsule3d::default()),
-        meshes.add(Torus::default()),
         meshes.add(Cylinder::default()),
         meshes.add(Cuboid::default()),
         meshes.add(Sphere::default().mesh().ico(5).unwrap()),
@@ -97,7 +96,6 @@ fn setup(
         Shape::Box(Cuboid::from_size(Vec3::new(1.75, 0.52, 1.75))),
         Shape::Box(Cuboid::default()),
         Shape::Box(Cuboid::from_size(Vec3::new(1., 2., 1.))),
-        Shape::Box(Cuboid::from_size(Vec3::new(1.75, 0.52, 1.75))),
         Shape::Box(Cuboid::default()),
         Shape::Box(Cuboid::from_size(Vec3::splat(1.1))),
         Shape::Box(Cuboid::default()),
@@ -108,15 +106,15 @@ fn setup(
     let mut rng = rand::thread_rng();
 
     for i in 0..num_shapes {
-        for z in 0..8 {
-            for y in 0..2 {
+        for y in 0..7 {
+            for z in 0..1 {
                 let index = rng.gen_range(0..num_shapes);
                 let mesh = meshe_handles[index].to_owned();
                 let shape = shapes[index].to_owned();
                 let transform = Transform::from_xyz(
                     -X_EXTENT / 2. + i as f32 / (num_shapes - 1) as f32 * X_EXTENT,
-                    1. + 4.5 * y as f32,
-                    (3.0 - z as f32) * 1.95 + 1.5,
+                    (4.0 - y as f32) * 2.5 - 2.0,
+                    2. + 4.5 * z as f32,
                 );
                 commands.spawn((
                     PbrBundle {
@@ -135,12 +133,12 @@ fn setup(
     commands.spawn(PointLightBundle {
         point_light: PointLight {
             shadows_enabled: true,
-            intensity: 10_000_000.,
+            intensity: 20_000_000.,
             range: 100.0,
             shadow_depth_bias: 0.2,
             ..default()
         },
-        transform: Transform::from_xyz(8.0, 16.0, 8.0),
+        transform: Transform::from_xyz(8.0, 6.0, 18.0),
         ..default()
     });
 
@@ -148,11 +146,12 @@ fn setup(
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(50.0, 50.0)),
         material: materials.add(Color::from(SILVER)),
+        transform: Transform::IDENTITY.with_rotation(Quat::from_rotation_x(PI / 2.3)),
         ..default()
     });
 
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 22., 8.0).looking_at(Vec3::new(0., 1., 0.), Vec3::Y),
+        transform: Transform::from_xyz(0.0, 0., 22.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
         ..default()
     });
 }

@@ -14,6 +14,7 @@ let latestPick = [];
 // 监听 worker 发来的消息
 worker.onmessage = async (event) => {
   let data = event.data;
+  window.blockMS(window.onmessageBlockTime);
 
   switch (data.ty) {
     case "workerIsReady":
@@ -118,9 +119,9 @@ function resizeCanvasBy(containerID) {
 function addMouseEventObserver() {
   let workerContainer = document.getElementById("worker-thread-container");
   workerContainer.addEventListener("mousemove", function (event) {
+    window.blockMS(window.mousemoveBlockTime);
     // 在将 mouse move 事件发送给 worker 之前，清空上次的 pick 缓存
     latestPick = [];
-
     worker.postMessage({ ty: "mousemove", x: event.offsetX, y: event.offsetY });
   });
 
@@ -135,6 +136,7 @@ function addMouseEventObserver() {
 
   let mainContainer = document.getElementById("main-thread-container");
   mainContainer.addEventListener("mousemove", function (event) {
+    window.blockMS(window.mousemoveBlockTime);
     // 清空上次的 pick 缓存
     latestPick = [];
     window.mouse_move(event.offsetX, event.offsetY);
@@ -163,3 +165,8 @@ function send_pick_from_rust(pickList) {
   window.set_hover(latestPick);
 }
 window.send_pick_from_rust = send_pick_from_rust;
+
+function block_from_rust() {
+  window.blockMS(window.renderBlockTime);
+}
+window.block_from_rust = block_from_rust;

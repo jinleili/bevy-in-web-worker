@@ -10,17 +10,26 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);
-    // 在 app 初始化完成前，info! 无法使用，打印日志得用它
+    /// 在 app 初始化完成前，info! 无法使用，打印日志得用它
     #[wasm_bindgen(js_namespace = console)]
     pub(crate) fn log(s: &str);
 
-    // 发送 pick 列表
-    // 从 worker 环境发送
+    /// 发送 pick 列表
+    ///
+    /// 从 worker 环境发送
     #[wasm_bindgen(js_namespace = self)]
     pub(crate) fn send_pick_from_worker(list: js_sys::Array);
-    // 从主线程环境发送
-    #[wasm_bindgen(js_namespace = window)]
+    /// 从主线程环境发送
     pub(crate) fn send_pick_from_rust(list: js_sys::Array);
+
+    /// 执行阻塞
+    /// 由于 wasm 环境不支持 std::thread, 交由 js 环境代为执行
+    ///
+    /// 在 worker 环境执行
+    #[wasm_bindgen(js_namespace = self)]
+    pub(crate) fn block_from_worker();
+    /// 在主线程环境执行
+    pub(crate) fn block_from_rust();
 }
 
 #[wasm_bindgen]
@@ -136,6 +145,13 @@ pub fn set_selection(ptr: u64, arr: js_sys::Array) {
     active_info.selection = selection;
 }
 
+// 设置阻塞时间
+#[wasm_bindgen]
+pub fn set_block_time(ptr: u64, block_time: u32) {
+    let app = unsafe { &mut *(ptr as *mut WorkerApp) };
+    app.block_time = block_time;
+}
+
 /// 帧绘制
 /// render 运行在 worker 中时，主线程 post 绘制 msg 时可能 render 还没有完成当前帧的更新
 ///
@@ -154,6 +170,14 @@ pub fn enter_frame(ptr: u64) {
             app.cleanup();
         }
     } else {
+        // 模拟阻塞
+        let active_info = app.world_mut().get_resource::<ActiveInfo>().unwrap();
+        if active_info.is_in_worker {
+            block_from_worker();
+        } else {
+            block_from_rust();
+        }
+
         app.update();
     }
 }

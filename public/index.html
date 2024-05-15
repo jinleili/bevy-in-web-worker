@@ -36,8 +36,9 @@
     }
 
     #nav {
-      height: 124px;
+      height: 184px;
       width: 100%;
+      background-color: #fafafa;
     }
 
     #container {
@@ -62,7 +63,7 @@
     #rotate {
       width: 33px;
       height: 33px;
-      border: 1px solid red;
+      border: 1px solid crimson;
       transform-origin: center;
     }
 
@@ -91,6 +92,15 @@
         color: black;
       }
     }
+
+    .numberInput {
+      width: 50px;
+    }
+
+    .div33px {
+      height: 33px;
+      line-height: 33px;
+    }
   </style>
   <title>Web Worker</title>
 </head>
@@ -98,28 +108,41 @@
 <body>
   <div id="page">
     <div id="nav">
-      <div style="display: flex; height: 33px; background-color: #f5f5f5; line-height: 33px;">
+      <div style="display: flex; height: 33px; background-color: #f2f2f2; line-height: 33px;">
         <div class="child">
           <div id="rotate"></div>
         </div>
         <div class="child" style="flex: 2"> 主线程卡顿指示器</div>
         <a class="child" style="flex: 12; text-align: right;"
           href="https://github.com/jinleili/bevy-in-web-worker/blob/main/public/worker.js">查看源码</a>
-
       </div>
+
       <p> Ray Pick 结果(唯一标识)：<span id="pick-list" style="color: darkgoldenrod;"></span></p>
-      <div>
-        <input type="number" id="numberInput" placeholder="输入数字(0-200之间)" />
 
-        <button id="jank">开始阻塞主线程</button>
-        <button id="stop-jank">停止阻塞</button>
+      <!-- 模拟事件耗时 -->
+      <div class="div33px">
+        添加主线程事件阻塞时间: <span>mousemove<input type="number" id="mousemoveBlockInput" class="numberInput" value="1" max="100" />ms</span>&nbsp;&nbsp;
+        <span>onmessage<input type="number" id="onmessageBlockInput" class="numberInput" value="1" max="100" />ms</span>
+      </div>
+
+      <div class="div33px">
+        添加 Render 内阻塞时间: <span><input type="number" id="renderBlockInput" class="numberInput" value="1"
+            max="100" />ms</span> <span style="color: darkslategray;">&nbsp;&nbsp;(不区分主线程 / Woker，且没有考虑 Render 时本身要消耗的时间)</span>
+      </div>
+
+      <div class="div33px">
+        <input type="number" id="numberInput" value="32" placeholder="输入数字(0-200之间)" />
+
+        <button id="block">开始阻塞主线程</button>
+        <button id="stop-block">停止阻塞</button>
       </div>
     </div>
 
-    <div style="display:flex; height: 33px; font-weight: 500; text-align: center;">
-      <div class="child" style="color: crimson; line-height: 33px; background-color:darkgray;">主线程 renderer</div>
-      <div class="child" style="color:forestgreen;line-height: 33px; background-color:azure;">Woker 线程 renderer</div>
+    <div style="display:flex; height: 33px; font-weight: 400; text-align: center;">
+      <div class="child" style="color: crimson; line-height: 33px; background-color:#f2f2f2;">主线程</div>
+      <div class="child" style="color:darkcyan;line-height: 33px; background-color:azure;">Woker 线程 renderer</div>
     </div>
+
     <div id="container">
       <div id="main-thread-container">
         <canvas id="main-thread-canvas" raw-window-handle="1"></canvas>
@@ -137,12 +160,12 @@
 
   <script>
     // 主线程卡顿指示器
-    const jankIndicator = document.getElementById('rotate');
+    const blockIndicator = document.getElementById('rotate');
     let rotation = 0;
 
     function animate() {
       rotation += 2;
-      jankIndicator.style.transform = `rotate(${rotation}deg)`;
+      blockIndicator.style.transform = `rotate(${rotation}deg)`;
       requestAnimationFrame(animate);
     }
 
@@ -150,6 +173,9 @@
 
     // 模拟主线程阻塞
     let blockTime = 32;
+    window.renderBlockTime = 1;
+    window.mousemoveBlockTime = 1;
+    window.onmessageBlockTime = 1;
     let needsStop = true;
     let frameCount = 0;
 
@@ -166,25 +192,67 @@
       }
     });
 
-    document.getElementById("jank").addEventListener("click", () => {
-      needsStop = false;
-      frameCount = 0;
-      jankFn();
+    const mousemoveBlockInput = document.getElementById('mousemoveBlockInput');
+    mousemoveBlockInput.addEventListener('input', function () {
+      let inputValue = parseInt(mousemoveBlockInput.value);
+      if (inputValue > 100) {
+        alert('请输入 0 到 100 之间的数字');
+        mousemoveBlockInput.value = '100';
+        window.mousemoveBlockTime = 100;
+      } else {
+        window.mousemoveBlockTime = inputValue;
+      }
     });
 
-    document.getElementById("stop-jank").addEventListener("click", () => {
+    const onmessageBlockInput = document.getElementById('onmessageBlockInput');
+      onmessageBlockInput.addEventListener('input', function () {
+        let inputValue = parseInt(onmessageBlockInput.value);
+        if (inputValue > 100) {
+          alert('请输入 0 到 100 之间的数字');
+          onmessageBlockInput.value = '100';
+          window.onmessageBlockTime = 100;
+        } else {
+          window.onmessageBlockTime = inputValue;
+        }
+    });
+
+  const renderBlockInput = document.getElementById('renderBlockInput');
+  renderBlockInput.addEventListener('input', function () {
+    let inputValue = parseInt(renderBlockInput.value);
+    if (inputValue > 100) {
+      alert('请输入 0 到 100 之间的数字');
+      renderBlockInput.value = '100';
+      inputValue = 100;
+    }
+    // 阻塞时间分别对两个 engine 实例生效
+    window.renderBlockTime = inputValue;
+    window.blockWorkerRender(inputValue);
+  });
+
+    document.getElementById("block").addEventListener("click", () => {
+      needsStop = false;
+      frameCount = 0;
+      blockFrame();
+    });
+
+    document.getElementById("stop-block").addEventListener("click", () => {
       needsStop = true;
     });
 
-    function jankFn() {
+    function blockFrame() {
       if (needsStop === false) {
         // 当阻塞时长 >= 一帧的时长时，连续阻塞主线程就完全卡死了
         if (frameCount % 2 === 0) {
-          const start = performance.now();
-          while (performance.now() - start < blockTime) { }
+          window.blockMS(blockTime);
         }
-        requestAnimationFrame(jankFn);
+        requestAnimationFrame(blockFrame);
       }
+    }
+
+    // 按毫秒执行阻塞
+    window.blockMS = (ms) => {
+      const start = performance.now();
+      while (performance.now() - start < ms) { }
     }
   </script>
 </body>

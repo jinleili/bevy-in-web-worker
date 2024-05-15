@@ -14,6 +14,8 @@ struct WorkerApp {
     /// 手动包装事件需要
     pub(crate) window: Entity,
     pub(crate) scale_factor: f32,
+    /// 模拟要阻塞的时间
+    pub(crate) block_time: u32,
 }
 
 impl Deref for WorkerApp {
@@ -36,6 +38,7 @@ impl WorkerApp {
             app,
             window: Entity::PLACEHOLDER,
             scale_factor: 1.0,
+            block_time: 1,
         }
     }
 }
