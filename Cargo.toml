@@ -15,10 +15,10 @@ wgpu = "0.19.3"
 bevy = { git = "https://github.com/bevyengine/bevy", rev = "f1db525f143ca88a37b26158a43a978d04a8859a", features = [
     # bevy = { version = "0.13.2", features = [
     "bevy_pbr",
-    "bevy_ui",
-    "bevy_sprite",
+    # "bevy_ui",
+    # "bevy_sprite",
     "bevy_gizmos",
-    "ktx2",
+    # "ktx2",
     "tonemapping_luts",
     "webgpu",
 ], default-features = false }

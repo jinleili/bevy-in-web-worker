@@ -7,15 +7,15 @@ pub use web_ffi::*;
 mod canvas_view;
 use canvas_view::*;
 
+mod ray_pick;
+
 mod bevy_app;
 
-struct WorkerApp {
-    pub(crate) app: App,
+pub struct WorkerApp {
+    pub app: App,
     /// 手动包装事件需要
-    pub(crate) window: Entity,
-    pub(crate) scale_factor: f32,
-    /// 模拟要阻塞的时间
-    pub(crate) block_time: u32,
+    pub window: Entity,
+    pub scale_factor: f32,
 }
 
 impl Deref for WorkerApp {
@@ -33,20 +33,39 @@ impl DerefMut for WorkerApp {
 }
 
 impl WorkerApp {
-    pub(crate) fn new(app: App) -> Self {
+    pub fn new(app: App) -> Self {
         Self {
             app,
             window: Entity::PLACEHOLDER,
             scale_factor: 1.0,
-            block_time: 1,
         }
+    }
+
+    pub fn to_physical_size(&self, x: f32, y: f32) -> Vec2 {
+        Vec2::new(x * self.scale_factor, y * self.scale_factor)
     }
 }
 
-#[derive(Debug, Default, Resource)]
+#[derive(Debug, Resource)]
 pub(crate) struct ActiveInfo {
-    pub(crate) hover: HashMap<Entity, u64>,
-    pub(crate) selection: HashMap<Entity, u64>,
+    pub hover: HashMap<Entity, u64>,
+    pub selection: HashMap<Entity, u64>,
+    /// 响应拖动的对象
+    pub drag: Entity,
+    /// 上一帧的拖动位置
+    pub last_drag_pos: Vec2,
     // 是否运行在 worker 中
-    pub(crate) is_in_worker: bool,
+    pub is_in_worker: bool,
+}
+
+impl ActiveInfo {
+    pub fn new() -> Self {
+        ActiveInfo {
+            hover: HashMap::new(),
+            selection: HashMap::new(),
+            drag: Entity::PLACEHOLDER,
+            last_drag_pos: Vec2::ZERO,
+            is_in_worker: false,
+        }
+    }
 }

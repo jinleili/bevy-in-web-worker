@@ -76,7 +76,7 @@ pub fn create_window_by_offscreen_canvas(
 fn create_window(app: &mut WorkerApp, view_obj: ViewObj, is_in_worker: bool) {
     app.insert_non_send_resource(view_obj);
 
-    let mut info = ActiveInfo::default();
+    let mut info = ActiveInfo::new();
     info.is_in_worker = is_in_worker;
     // 选中/高亮 资源
     app.insert_resource(info);
@@ -111,13 +111,40 @@ pub fn is_preparation_completed(ptr: u64) -> u32 {
 pub fn mouse_move(ptr: u64, x: f32, y: f32) {
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
     // 提前将逻辑像转换成物理像素
-    let scale_factor = app.scale_factor;
+    let position = app.to_physical_size(x, y);
     let cursor_move = CursorMoved {
         window: app.window,
-        position: Vec2::new(x * scale_factor, y * scale_factor),
+        position,
         delta: None,
     };
     app.world_mut().send_event(cursor_move);
+}
+
+/// 鼠标左键按下
+#[wasm_bindgen]
+pub fn left_bt_down(ptr: u64, obj: JsValue, x: f32, y: f32) {
+    let app = unsafe { &mut *(ptr as *mut WorkerApp) };
+    let position = app.to_physical_size(x, y);
+    let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
+
+    let value = bigint_to_u64(obj);
+    if let Ok(v) = value {
+        let entity = Entity::from_bits(v);
+        active_info.drag = entity;
+        active_info.last_drag_pos = position;
+        // 当前要 drap 的对象同时也是 selection 对象
+        let mut map: HashMap<Entity, u64> = HashMap::new();
+        map.insert(entity, 0);
+        active_info.selection = map;
+    }
+}
+
+/// 鼠标左键松开
+#[wasm_bindgen]
+pub fn left_bt_up(ptr: u64) {
+    let app = unsafe { &mut *(ptr as *mut WorkerApp) };
+    let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
+    active_info.drag = Entity::PLACEHOLDER;
 }
 
 /// 设置 hover（高亮） 效果
@@ -133,6 +160,7 @@ pub fn set_hover(ptr: u64, arr: js_sys::Array) {
     active_info.hover = hover;
 }
 
+/// 设置 选中 效果
 #[wasm_bindgen]
 pub fn set_selection(ptr: u64, arr: js_sys::Array) {
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
@@ -143,13 +171,6 @@ pub fn set_selection(ptr: u64, arr: js_sys::Array) {
 
     // 更新 hover 数据
     active_info.selection = selection;
-}
-
-// 设置阻塞时间
-#[wasm_bindgen]
-pub fn set_block_time(ptr: u64, block_time: u32) {
-    let app = unsafe { &mut *(ptr as *mut WorkerApp) };
-    app.block_time = block_time;
 }
 
 /// 帧绘制

@@ -1,11 +1,10 @@
-use crate::{send_pick_from_rust, send_pick_from_worker, ActiveInfo, WorkerApp};
-use bevy::color::palettes::css::{BLANCHED_ALMOND, GREEN};
+use crate::ray_pick::RayPickPlugin;
+use crate::WorkerApp;
+use bevy::color::palettes::css::BLANCHED_ALMOND;
 use bevy::color::palettes::tailwind::BLUE_400;
-use bevy::input::mouse::MouseWheel;
-use bevy::utils::hashbrown::HashMap;
 use bevy::{
     color::palettes::basic::SILVER,
-    math::bounding::{Aabb3d, Bounded3d, RayCast3d},
+    math::bounding::{Aabb3d, Bounded3d},
     prelude::*,
     render::{
         render_asset::RenderAssetUsages,
@@ -14,7 +13,7 @@ use bevy::{
 };
 use rand::Rng;
 use std::f32::consts::PI;
-use wasm_bindgen::JsValue;
+use std::ops::Deref;
 
 pub(crate) fn init_app() -> WorkerApp {
     let mut app = App::new();
@@ -27,13 +26,10 @@ pub(crate) fn init_app() -> WorkerApp {
         }),
         ..default()
     });
-    app.add_plugins(default_plugins);
+    app.add_plugins((default_plugins, RayPickPlugin));
 
     app.add_systems(Startup, setup)
-        .add_systems(
-            Update,
-            (rotate, update_aabbes, mouse_events_system, update_active),
-        )
+        .add_systems(Update, (rotate, update_aabbes))
         .add_systems(PostUpdate, render_active_shapes);
 
     WorkerApp::new(app)
@@ -50,9 +46,9 @@ enum Shape {
 }
 /// 标记是否 选中/高亮
 #[derive(Component, Default)]
-struct ActiveState {
-    hover: bool,
-    selected: bool,
+pub(crate) struct ActiveState {
+    pub hover: bool,
+    pub selected: bool,
 }
 
 impl ActiveState {
@@ -65,7 +61,7 @@ impl ActiveState {
     }
 }
 
-const X_EXTENT: f32 = 15.0;
+const X_EXTENT: f32 = 13.0;
 
 fn setup(
     mut commands: Commands,
@@ -138,7 +134,7 @@ fn setup(
             shadow_depth_bias: 0.2,
             ..default()
         },
-        transform: Transform::from_xyz(8.0, 6.0, 18.0),
+        transform: Transform::from_xyz(8.0, 4.0, 16.0),
         ..default()
     });
 
@@ -146,12 +142,12 @@ fn setup(
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(50.0, 50.0)),
         material: materials.add(Color::from(SILVER)),
-        transform: Transform::IDENTITY.with_rotation(Quat::from_rotation_x(PI / 2.3)),
+        transform: Transform::IDENTITY.with_rotation(Quat::from_rotation_x(PI / 2.)),
         ..default()
     });
 
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0., 22.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+        transform: Transform::from_xyz(0.0, -9., 18.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
         ..default()
     });
 }
@@ -215,7 +211,15 @@ fn uv_debug_texture() -> Image {
 
 /// entity 的 aabb
 #[derive(Component, Debug)]
-struct CurrentVolume(Aabb3d);
+pub struct CurrentVolume(Aabb3d);
+
+impl Deref for CurrentVolume {
+    type Target = Aabb3d;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 /// 更新 aabb
 fn update_aabbes(
@@ -236,75 +240,5 @@ fn update_aabbes(
             Shape::Box(b) => b.aabb_3d(translation, rotation),
         };
         commands.entity(entity).insert(CurrentVolume(aabb));
-    }
-}
-
-/// 构造一条相机射线
-fn ray_from_screenspace(
-    cursor_pos_screen: Vec2,
-    camera: &Camera,
-    camera_transform: &GlobalTransform,
-) -> Option<Ray3d> {
-    let mut viewport_pos = cursor_pos_screen;
-    if let Some(viewport) = &camera.viewport {
-        viewport_pos -= viewport.physical_position.as_vec2();
-    }
-    camera
-        .viewport_to_world(camera_transform, viewport_pos)
-        .map(Ray3d::from)
-}
-
-fn mouse_events_system(
-    mut cursor_moved_events: EventReader<CursorMoved>,
-    mut mouse_wheel_events: EventReader<MouseWheel>,
-    app_info: Res<ActiveInfo>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
-    mut query: Query<(Entity, &CurrentVolume), With<ActiveState>>,
-) {
-    // hover 列表
-    // 鼠标事件的频率通常比 render 高，使用 HashMap 是为了避免 pick 结果有重复
-    let mut list: HashMap<Entity, u64> = HashMap::new();
-
-    for event in cursor_moved_events.read() {
-        let (camera, transform) = cameras.get_single().unwrap();
-        let ray = ray_from_screenspace(event.position, camera, transform).unwrap();
-        let ray_cast = RayCast3d::from_ray(ray, 30.);
-        // 计算射线拾取
-        for (entity, volume) in query.iter_mut() {
-            // 射线求交
-            let toi = ray_cast.aabb_intersection_at(&volume.0);
-
-            // 刻意不在此时设置 hover，收集到所有 pick 到的 entity 发送给主线程，
-            // 由主线程决定需要 hover 的对象后再发送回对应的 entity
-            // status.hover = toi.is_some();
-
-            if toi.is_some() {
-                list.insert(entity, entity.to_bits());
-            }
-        }
-    }
-
-    if list.len() > 0 {
-        // 通知 js pick 结果
-        let js_array = js_sys::Array::new();
-        for (_, &item) in list.iter() {
-            js_array.push(&JsValue::from(item));
-        }
-        if app_info.is_in_worker {
-            send_pick_from_worker(js_array);
-        } else {
-            send_pick_from_rust(js_array);
-        }
-    }
-
-    // TODO: mouse wheel
-    for _event in mouse_wheel_events.read() {}
-}
-
-/// 更新 选中/高亮
-fn update_active(active_info: ResMut<ActiveInfo>, mut query: Query<(Entity, &mut ActiveState)>) {
-    for (entity, mut status) in query.iter_mut() {
-        status.hover = active_info.hover.contains_key(&entity);
-        status.selected = active_info.selection.contains_key(&entity)
     }
 }

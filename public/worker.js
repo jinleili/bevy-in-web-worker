@@ -9,7 +9,8 @@ const {
   mouse_move,
   set_hover,
   set_selection,
-  set_block_time,
+  left_bt_down,
+  left_bt_up,
 } = wasm_bindgen;
 
 let appHandle = 0;
@@ -44,6 +45,14 @@ async function init_wasm_in_worker() {
       case "select":
         // 设置 选中 效果
         set_selection(appHandle, data.list);
+        break;
+
+      case "leftBtDown":
+        left_bt_down(appHandle, data.pickItem, data.x, data.y);
+        break;
+
+      case "leftBtUp":
+        left_bt_up(appHandle);
         break;
 
       case "blockRender":

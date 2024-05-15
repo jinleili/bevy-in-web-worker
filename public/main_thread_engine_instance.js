@@ -4,6 +4,8 @@ import init, {
   create_window_by_canvas,
   enter_frame,
   mouse_move,
+  left_bt_down,
+  left_bt_up,
   set_hover,
   set_selection,
 } from "./bevy_in_main_thread.js";
@@ -26,6 +28,14 @@ launchMainApp();
 
 window.mouse_move = (x, y) => {
   if (initFinished > 0) mouse_move(appHandle, x, y);
+};
+
+window.left_bt_down = (pickItem, x, y) => {
+  if (initFinished > 0) left_bt_down(appHandle, pickItem, x, y);
+};
+
+window.left_bt_up = () => {
+  if (initFinished > 0) left_bt_up(appHandle);
 };
 
 window.set_hover = (list) => {

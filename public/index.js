@@ -117,12 +117,28 @@ function resizeCanvasBy(containerID) {
 
 // 添加鼠标事件监听
 function addMouseEventObserver() {
+  // 服务于 worker 线程 engine 实例的事件监听
   let workerContainer = document.getElementById("worker-thread-container");
   workerContainer.addEventListener("mousemove", function (event) {
     window.blockMS(window.mousemoveBlockTime);
     // 在将 mouse move 事件发送给 worker 之前，清空上次的 pick 缓存
     latestPick = [];
     worker.postMessage({ ty: "mousemove", x: event.offsetX, y: event.offsetY });
+  });
+
+  workerContainer.addEventListener("mousedown", function (event) {
+    if (typeof latestPick[0] !== "undefined") {
+      worker.postMessage({
+        ty: "leftBtDown",
+        pickItem: latestPick[0],
+        x: event.offsetX,
+        y: event.offsetY,
+      });
+    }
+  });
+
+  workerContainer.addEventListener("mouseup", function (_event) {
+    worker.postMessage({ ty: "leftBtUp" });
   });
 
   workerContainer.addEventListener("click", function (event) {
@@ -134,12 +150,23 @@ function addMouseEventObserver() {
     }
   });
 
+  // 服务于主线程 engine 实例的事件监听
   let mainContainer = document.getElementById("main-thread-container");
   mainContainer.addEventListener("mousemove", function (event) {
     window.blockMS(window.mousemoveBlockTime);
     // 清空上次的 pick 缓存
     latestPick = [];
     window.mouse_move(event.offsetX, event.offsetY);
+  });
+
+  mainContainer.addEventListener("mousedown", function (event) {
+    if (typeof latestPick[0] !== "undefined") {
+      window.left_bt_down(latestPick[0], event.offsetX, event.offsetY);
+    }
+  });
+
+  mainContainer.addEventListener("mouseup", function (_event) {
+    window.left_bt_up();
   });
 
   mainContainer.addEventListener("click", function (_event) {
