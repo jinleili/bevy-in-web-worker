@@ -1,5 +1,5 @@
 use crate::ray_pick::RayPickPlugin;
-use crate::WorkerApp;
+use crate::{ActiveInfo, WorkerApp};
 use bevy::color::palettes::css::BLANCHED_ALMOND;
 use bevy::color::palettes::tailwind::BLUE_400;
 use bevy::{
@@ -83,7 +83,6 @@ fn setup(
         meshes.add(Cylinder::default()),
         meshes.add(Cuboid::default()),
         meshes.add(Sphere::default().mesh().ico(5).unwrap()),
-        meshes.add(Sphere::default().mesh().uv(32, 18)),
     ];
     // 包围盒形状
     let shapes = [
@@ -95,21 +94,20 @@ fn setup(
         Shape::Box(Cuboid::default()),
         Shape::Box(Cuboid::from_size(Vec3::splat(1.1))),
         Shape::Box(Cuboid::default()),
-        Shape::Box(Cuboid::default()),
     ];
 
     let num_shapes = meshe_handles.len();
     let mut rng = rand::thread_rng();
 
     for i in 0..num_shapes {
-        for y in 0..7 {
+        for y in 0..5 {
             for z in 0..1 {
                 let index = rng.gen_range(0..num_shapes);
                 let mesh = meshe_handles[index].to_owned();
                 let shape = shapes[index].to_owned();
                 let transform = Transform::from_xyz(
                     -X_EXTENT / 2. + i as f32 / (num_shapes - 1) as f32 * X_EXTENT,
-                    (4.0 - y as f32) * 2.5 - 2.0,
+                    (3.0 - y as f32) * 3. - 2.0,
                     2. + 4.5 * z as f32,
                 );
                 commands.spawn((
@@ -152,7 +150,15 @@ fn setup(
     });
 }
 
-fn rotate(mut query: Query<&mut Transform, With<Shape>>, time: Res<Time>) {
+fn rotate(
+    app_info: Res<ActiveInfo>,
+    mut query: Query<&mut Transform, With<Shape>>,
+    time: Res<Time>,
+) {
+    if !app_info.auto_animate {
+        return;
+    }
+
     for mut transform in &mut query {
         transform.rotate_y(time.delta_seconds() / 2.);
     }

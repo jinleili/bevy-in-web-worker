@@ -304,7 +304,17 @@ export function set_selection(ptr, arr) {
 }
 
 /**
+* 打开 / 关闭动画
+* @param {bigint} ptr
+* @param {number} needs_animate
+*/
+export function set_auto_animation(ptr, needs_animate) {
+    wasm.set_auto_animation(ptr, needs_animate);
+}
+
+/**
 * 帧绘制
+*
 * render 运行在 worker 中时，主线程 post 绘制 msg 时可能 render 还没有完成当前帧的更新
 *
 * TODO：需要检测帧依赖的资源是否已加载完成，否则可能提交的 update 累积会导致栈溢出
@@ -377,6 +387,9 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
+    imports.wbg.__wbg_log_d366ace1186be229 = function(arg0, arg1) {
+        console.log(getStringFromWasm0(arg0, arg1));
+    };
     imports.wbg.__wbg_new_16b304a2cfa7ff4a = function() {
         const ret = new Array();
         return addHeapObject(ret);
@@ -394,9 +407,6 @@ function __wbg_get_imports() {
     };
     imports.wbg.__wbg_sendpickfromrust_8da7244e46c74b62 = function(arg0) {
         send_pick_from_rust(takeObject(arg0));
-    };
-    imports.wbg.__wbg_log_d366ace1186be229 = function(arg0, arg1) {
-        console.log(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
         takeObject(arg0);
@@ -1290,11 +1300,11 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_executeBundles_0af360b832437e34 = function(arg0, arg1) {
         getObject(arg0).executeBundles(getObject(arg1));
     };
-    imports.wbg.__wbindgen_closure_wrapper30708 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper30721 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 2794, __wbg_adapter_30);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper31420 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper31433 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 2798, __wbg_adapter_30);
         return addHeapObject(ret);
     };

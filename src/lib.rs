@@ -54,8 +54,15 @@ pub(crate) struct ActiveInfo {
     pub drag: Entity,
     /// 上一帧的拖动位置
     pub last_drag_pos: Vec2,
-    // 是否运行在 worker 中
+    /// 是否运行在 worker 中
     pub is_in_worker: bool,
+    /// 是否自动执行场景对象的旋转动画
+    pub auto_animate: bool,
+    /// 剩余帧数
+    /// 
+    /// 当关闭了自动运行的帧动画之后，场景将仅由鼠标事件驱动更新。由于帧渲染需要由 requestAnimationFrame 驱动
+    /// 来保持与浏览器显示刷新的同步，所以鼠标事件不会直接调用 app.update(), 而是重置此待更新的帧数
+    pub remaining_frames: u32,
 }
 
 impl ActiveInfo {
@@ -66,6 +73,8 @@ impl ActiveInfo {
             drag: Entity::PLACEHOLDER,
             last_drag_pos: Vec2::ZERO,
             is_in_worker: false,
+            auto_animate: true,
+            remaining_frames: 0,
         }
     }
 }

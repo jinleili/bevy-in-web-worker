@@ -118,6 +118,9 @@ pub fn mouse_move(ptr: u64, x: f32, y: f32) {
         delta: None,
     };
     app.world_mut().send_event(cursor_move);
+
+    let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
+    active_info.remaining_frames = 10;
 }
 
 /// 鼠标左键按下
@@ -137,6 +140,7 @@ pub fn left_bt_down(ptr: u64, obj: JsValue, x: f32, y: f32) {
         map.insert(entity, 0);
         active_info.selection = map;
     }
+    active_info.remaining_frames = 10;
 }
 
 /// 鼠标左键松开
@@ -145,6 +149,8 @@ pub fn left_bt_up(ptr: u64) {
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
     let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
     active_info.drag = Entity::PLACEHOLDER;
+
+    active_info.remaining_frames = 10;
 }
 
 /// 设置 hover（高亮） 效果
@@ -155,9 +161,10 @@ pub fn set_hover(ptr: u64, arr: js_sys::Array) {
 
     // 将 js hover 列表转换为 rust 对象
     let hover = to_map(arr);
-
     // 更新 hover 数据
     active_info.hover = hover;
+
+    active_info.remaining_frames = 10;
 }
 
 /// 设置 选中 效果
@@ -168,12 +175,22 @@ pub fn set_selection(ptr: u64, arr: js_sys::Array) {
 
     // 将 js selection 列表转换为 rust 对象
     let selection = to_map(arr);
-
     // 更新 hover 数据
     active_info.selection = selection;
+
+    active_info.remaining_frames = 10;
+}
+
+/// 打开 / 关闭动画
+#[wasm_bindgen]
+pub fn set_auto_animation(ptr: u64, needs_animate: u32) {
+    let app = unsafe { &mut *(ptr as *mut WorkerApp) };
+    let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
+    active_info.auto_animate = if needs_animate > 0 { true } else { false };
 }
 
 /// 帧绘制
+///
 /// render 运行在 worker 中时，主线程 post 绘制 msg 时可能 render 还没有完成当前帧的更新
 ///
 /// TODO：需要检测帧依赖的资源是否已加载完成，否则可能提交的 update 累积会导致栈溢出
@@ -181,6 +198,16 @@ pub fn set_selection(ptr: u64, arr: js_sys::Array) {
 pub fn enter_frame(ptr: u64) {
     // 获取到指针指代的 Rust 对象的可变借用
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
+    {
+        // 检查执行帧渲染的条件
+        let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
+        if !active_info.auto_animate && active_info.remaining_frames == 0 {
+            return;
+        }
+        if active_info.remaining_frames > 0 {
+            active_info.remaining_frames -= 1;
+        }
+    }
 
     if app.plugins_state() != PluginsState::Cleaned {
         if app.plugins_state() != PluginsState::Ready {
@@ -192,7 +219,7 @@ pub fn enter_frame(ptr: u64) {
         }
     } else {
         // 模拟阻塞
-        let active_info = app.world_mut().get_resource::<ActiveInfo>().unwrap();
+        let active_info = app.world().get_resource::<ActiveInfo>().unwrap();
         if active_info.is_in_worker {
             block_from_worker();
         } else {

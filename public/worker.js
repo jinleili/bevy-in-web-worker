@@ -11,6 +11,7 @@ const {
   set_selection,
   left_bt_down,
   left_bt_up,
+  set_auto_animation,
 } = wasm_bindgen;
 
 let appHandle = 0;
@@ -70,6 +71,10 @@ async function init_wasm_in_worker() {
 
       case "blockRender":
         renderBlockTime = data.blockTime;
+        break;
+
+      case "autoAnimation":
+        set_auto_animation(appHandle, data.autoAnimation);
         break;
 
       default:

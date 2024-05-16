@@ -9,6 +9,7 @@ import init, {
   set_hover,
   set_selection,
   release_app,
+  set_auto_animation,
 } from "./bevy_in_main_thread.js";
 
 let appHandle = 0;
@@ -37,6 +38,7 @@ function create_main_app() {
 window.start_main_app = () => {
   isStoppedRunning = false;
   requestAnimationFrame(enterFrame);
+  setContainerOpacity("100%");
 };
 
 // 停止 engine 实例
@@ -47,6 +49,7 @@ window.stop_main_app = () => {
   //   initFinished = 0;
   //   window.release_app = undefined;
   isStoppedRunning = true;
+  setContainerOpacity("50%");
 };
 
 window.mouse_move = (x, y) => {
@@ -69,6 +72,10 @@ window.set_selection = (list) => {
   if (initFinished > 0) set_selection(appHandle, list);
 };
 
+window.set_main_app_auto_animation = (needsAnimate) => {
+  if (initFinished > 0) set_auto_animation(appHandle, needsAnimate);
+};
+
 function enterFrame(_dt) {
   // 当 app 准备好时，执行 app 的帧循环
   if (appHandle === 0 || isStoppedRunning) return;
@@ -80,4 +87,9 @@ function enterFrame(_dt) {
     initFinished = is_preparation_completed(appHandle);
   }
   requestAnimationFrame(enterFrame);
+}
+
+function setContainerOpacity(opacity) {
+  let ele = document.getElementById("main-thread-container");
+  ele.style.opacity = opacity;
 }

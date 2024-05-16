@@ -36,6 +36,7 @@
     }
 
     #nav {
+      position: relative;
       height: 217px;
       width: 100%;
       background-color: #fafafa;
@@ -101,6 +102,18 @@
       height: 33px;
       line-height: 33px;
     }
+
+    #app-setting {
+      position: absolute;
+      top: 108px;
+      left: 700px;
+      width: 200px;
+      height: 77px;
+      border: 1px solid lightblue;
+      border-radius: 12px;
+      background-color: azure;
+      padding: 10px;
+    }
   </style>
   <title>Web Worker</title>
 </head>
@@ -155,6 +168,22 @@
           <input type="radio" name="runTime" value="2" onchange="runTimeChanged(this)">
           仅运行 Worker 线程实例
         </label>
+      </div>
+
+      <!-- Engine 设置 -->
+      <div id="app-setting">
+        <b>场景设置:</b>
+        <div class="div33px">
+          <label>
+            <input type="radio" name="autoAnimate" value="0" onchange="autoAnimationChanged(this)">
+            关闭动画&nbsp;&nbsp;
+          </label>
+
+          <label>
+            <input type="radio" name="autoAnimate" value="1" checked onchange="autoAnimationChanged(this)">
+            打开动画
+          </label>
+        </div>
       </div>
     </div>
 
@@ -293,6 +322,13 @@
           if (window.stop_main_app) window.stop_main_app();
           break;
       }
+    }
+
+    // 打开/关闭 动画
+    function autoAnimationChanged(radioBt) {
+      let needsAnimate = parseInt(radioBt.value);
+      if (window.set_worker_auto_animation) window.set_worker_auto_animation(needsAnimate);
+      if (window.set_main_app_auto_animation) window.set_main_app_auto_animation(needsAnimate);
     }
   </script>
 </body>

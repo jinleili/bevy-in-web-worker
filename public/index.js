@@ -202,14 +202,24 @@ window.blockWorkerRender = (dt) => {
   worker.postMessage({ ty: "blockRender", blockTime: dt });
 };
 
-
 // 启动 engine 实例
 window.start_worker_app = () => {
   worker.postMessage({ ty: "startRunning" });
+  setContainerOpacity("100%");
 };
 
 // 停止 engine 实例
 window.stop_worker_app = () => {
   worker.postMessage({ ty: "stopRunning" });
+  setContainerOpacity("50%");
 };
 
+// 打开/关闭 engine 动画
+window.set_worker_auto_animation = (needsAnimation) => {
+  worker.postMessage({ ty: "autoAnimation", autoAnimation: needsAnimation });
+};
+
+function setContainerOpacity(opacity) {
+  let ele = document.getElementById("worker-thread-container");
+  ele.style.opacity = opacity;
+}
