@@ -7,7 +7,6 @@ use bevy::ecs::{
     system::{Commands, NonSendMut, Query, SystemState},
 };
 use bevy::window::{exit_on_all_closed, RawHandleWrapper, Window, WindowClosed, WindowCreated};
-use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 
 pub struct CanvasViewPlugin;
 
@@ -57,21 +56,12 @@ pub fn create_canvas_window(app: &mut App) {
         window.resolution.set_scale_factor(scale_factor as f32);
         window.resolution.set(logical_res.0, logical_res.1);
 
-        let (window_handle, display_handle) = match app_view {
-            ViewObj::Canvas(app_view) => (
-                app_view.window_handle().unwrap().as_raw(),
-                app_view.display_handle().unwrap().as_raw(),
-            ),
-            ViewObj::Offscreen(app_view) => (
-                app_view.window_handle().unwrap().as_raw(),
-                app_view.display_handle().unwrap().as_raw(),
-            ),
+        let raw_window_wrapper = match app_view {
+            ViewObj::Canvas(window_wrapper) => RawHandleWrapper::new(window_wrapper),
+            ViewObj::Offscreen(window_wrapper) => RawHandleWrapper::new(window_wrapper),
         };
 
-        commands.entity(entity).insert(RawHandleWrapper {
-            window_handle,
-            display_handle,
-        });
+        commands.entity(entity).insert(raw_window_wrapper.unwrap());
 
         created_window_events.send(WindowCreated { window: entity });
         break;

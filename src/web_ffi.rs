@@ -52,7 +52,7 @@ pub fn create_window_by_canvas(ptr: u64, canvas_id: &str, scale_factor: f32) {
 
     // 完成自定义 canvas 窗口的创建
     let canvas = Canvas::new(canvas_id, 1);
-    let view_obj = ViewObj::Canvas(canvas);
+    let view_obj = ViewObj::from_canvas(canvas);
 
     create_window(app, view_obj, false);
 }
@@ -68,7 +68,7 @@ pub fn create_window_by_offscreen_canvas(
     app.scale_factor = scale_factor;
 
     let offscreen_canvas = OffscreenCanvas::new(canvas, scale_factor, 1);
-    let view_obj = ViewObj::Offscreen(offscreen_canvas);
+    let view_obj = ViewObj::from_offscreen_canvas(offscreen_canvas);
 
     create_window(app, view_obj, true);
 }

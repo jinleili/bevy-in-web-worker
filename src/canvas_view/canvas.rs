@@ -1,11 +1,60 @@
+use bevy::window::WindowWrapper;
 use std::{ops::Deref, ptr::NonNull};
 use wasm_bindgen::{JsCast, JsValue};
 
 // 封装 ViewObj 来同时支持 Canvas 与 Offscreen
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum ViewObj {
-    Canvas(Canvas),
-    Offscreen(OffscreenCanvas),
+    Canvas(WindowWrapper<CanvasWrapper>),
+    Offscreen(WindowWrapper<OffscreenCanvasWrapper>),
+}
+
+impl ViewObj {
+    pub fn from_canvas(canvas: Canvas) -> Self {
+        ViewObj::Canvas(WindowWrapper::new(CanvasWrapper::new(canvas)))
+    }
+
+    pub fn from_offscreen_canvas(canvas: OffscreenCanvas) -> Self {
+        ViewObj::Offscreen(WindowWrapper::new(OffscreenCanvasWrapper::new(canvas)))
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct SendSyncWrapper<T>(pub(crate) T);
+
+unsafe impl<T> Send for SendSyncWrapper<T> {}
+unsafe impl<T> Sync for SendSyncWrapper<T> {}
+
+#[derive(Debug)]
+pub struct CanvasWrapper(SendSyncWrapper<Canvas>);
+impl CanvasWrapper {
+    pub fn new(canvas: Canvas) -> Self {
+        CanvasWrapper(SendSyncWrapper(canvas))
+    }
+}
+
+impl Deref for CanvasWrapper {
+    type Target = Canvas;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0 .0
+    }
+}
+
+#[derive(Debug)]
+pub struct OffscreenCanvasWrapper(SendSyncWrapper<OffscreenCanvas>);
+impl OffscreenCanvasWrapper {
+    pub fn new(canvas: OffscreenCanvas) -> Self {
+        OffscreenCanvasWrapper(SendSyncWrapper(canvas))
+    }
+}
+
+impl Deref for OffscreenCanvasWrapper {
+    type Target = OffscreenCanvas;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0 .0
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -67,13 +116,13 @@ impl Deref for Canvas {
     }
 }
 
-impl raw_window_handle::HasWindowHandle for Canvas {
+impl raw_window_handle::HasWindowHandle for CanvasWrapper {
     fn window_handle(
         &self,
     ) -> Result<raw_window_handle::WindowHandle<'_>, raw_window_handle::HandleError> {
         use raw_window_handle::{RawWindowHandle, WebCanvasWindowHandle, WindowHandle};
 
-        let value: &JsValue = &self.element;
+        let value: &JsValue = &self.0 .0.element;
         let obj: NonNull<std::ffi::c_void> = NonNull::from(value).cast();
         let handle = WebCanvasWindowHandle::new(obj);
         let raw = RawWindowHandle::WebCanvas(handle);
@@ -81,7 +130,7 @@ impl raw_window_handle::HasWindowHandle for Canvas {
     }
 }
 
-impl raw_window_handle::HasDisplayHandle for Canvas {
+impl raw_window_handle::HasDisplayHandle for CanvasWrapper {
     fn display_handle(
         &self,
     ) -> Result<raw_window_handle::DisplayHandle<'_>, raw_window_handle::HandleError> {
@@ -120,14 +169,6 @@ impl OffscreenCanvas {
     }
 }
 
-impl Deref for OffscreenCanvas {
-    type Target = web_sys::OffscreenCanvas;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
 impl From<&Canvas> for OffscreenCanvas {
     fn from(value: &Canvas) -> Self {
         let offscreen = value.element.transfer_control_to_offscreen().unwrap();
@@ -136,13 +177,13 @@ impl From<&Canvas> for OffscreenCanvas {
     }
 }
 
-impl raw_window_handle::HasWindowHandle for OffscreenCanvas {
+impl raw_window_handle::HasWindowHandle for OffscreenCanvasWrapper {
     fn window_handle(
         &self,
     ) -> Result<raw_window_handle::WindowHandle<'_>, raw_window_handle::HandleError> {
         use raw_window_handle::{RawWindowHandle, WebOffscreenCanvasWindowHandle, WindowHandle};
 
-        let value: &JsValue = &self.inner;
+        let value: &JsValue = &self.0 .0.inner;
         let obj: NonNull<std::ffi::c_void> = NonNull::from(value).cast();
         let handle = WebOffscreenCanvasWindowHandle::new(obj);
         let raw = RawWindowHandle::WebOffscreenCanvas(handle);
@@ -150,7 +191,7 @@ impl raw_window_handle::HasWindowHandle for OffscreenCanvas {
     }
 }
 
-impl raw_window_handle::HasDisplayHandle for OffscreenCanvas {
+impl raw_window_handle::HasDisplayHandle for OffscreenCanvasWrapper {
     fn display_handle(
         &self,
     ) -> Result<raw_window_handle::DisplayHandle<'_>, raw_window_handle::HandleError> {
