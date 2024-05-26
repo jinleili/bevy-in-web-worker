@@ -1,46 +1,56 @@
-# Bevy-in-Web-Worker
+# Bevy in Web Worker
+[简体中文](README_zh.md)
 
-Engine 放进 Web Worker 后与主线程交互的通信时延与性能验证
+Showcasing how to run the `Bevy` App within a `Web Worker` and the interaction between HTML elements and Bevy.
 
-**验证点：**
+Implemented `CanvasViewPlugin` to replace `bevy_winit`, allowing the Bevy engine to run efficiently in a `Web Worker`, thereby significantly improving the application's performance and responsiveness. Additionally, it demonstrates the bidirectional communication between HTML elements and the Bevy engine, facilitating complex interaction patterns to validate the communication latency and performance when the Engine is moved into a Web Worker and interacts with the `UI thread`.
 
-1. 主线程与 Worker 之间事件通信成本是否会很高。
-2. 异步的 pick 接口是否会导致用户交互体验变差。
-3. 主线程阻塞对 事件/ worker 的影响。
-4. 鼠标事件，onmessage 及 render 内阻塞对体验上的影响。
+**Validation Points:**
 
-**针对上面验证点的设计：**
+1. Whether the event communication cost between the main thread and the Worker is high.
+2. Whether the asynchronous pick interface leads to poor user interaction experience.
+3. The impact of main thread blocking on events/workers.
+4. The impact on experience caused by mouse events, onmessage, and render blocking.
 
-1. 不对鼠标事件触发频率做任何 **Throttle**, 每一个 mousemove 事件都会发送给 worker, 由 worker 执行一次 ray pick 后将结果发回给主线程;
-2. 设计了高交互复杂度 **选中/高亮** 逻辑：
-    1. 主线程 postMsg 给 worker -> 
-    2. worker 转交任务给 engine 执行 ray pick -> 
-    3. 将结果从 engine 发给 worker -> 
-    4. 由 worker postMsg 给主线程 -> 
-    5. 主线程再 postMsg 给 worker 执行需要的 **选中/高亮**
-3. 模拟了主线程阻塞的场景，可以控制单帧阻塞时长，同时左上角有一个**主线程卡顿指示器**便于观察阻塞结果;
-4. 界面中同时提供了 主线程与 Worker 线程 两个运行实例，方便直观对比;
-5. 模拟了 mousemove, onmessage 及 render 内阻塞的场景;
-6. 提供了按住鼠标左键拖动场景对象的功能;
-7. 模拟了工具类 App 的帧渲染逻辑：关闭场景动画后，帧渲染就完全由鼠标事件驱动;
+**Design for the above validation points:**
 
+1. No **Throttle** on the mouse event trigger frequency; every mousemove event is sent to the worker, executed by the worker for ray picking, and the result is sent back to the main thread.
+2. Designed a high-complexity interaction logic for **selection/highlighting**:
+    1. Main thread postMsg to the worker -> 
+    2. Worker delegates the task to the engine to execute ray pick -> 
+    3. Send the result from the engine to the worker -> 
+    4. Worker postMsg to the main thread -> 
+    5. Main thread postMsg to the worker to perform the necessary **selection/highlighting**
+3. Simulated scenarios of main thread blocking with controllable frame block duration, with a **main thread stutter indicator** at the upper left corner for easy observation of blocking results.
+4. The interface also provides two running instances of the main thread and the Worker thread for intuitive comparison.
+5. Simulated scenarios of mousemove, onmessage, and render blocking.
+6. Provided the functionality to drag scene objects by holding the left mouse button.
+7. Simulated frame rendering logic of a utility App: with scene animation turned off, frame rendering is entirely driven by mouse events.
+
+## Screenshot
 ![Bevy in Web Worker](./screenshot.png) 
 
-## 代码运行
-
+## Running
 ```sh
-# 编译 WASM：
-# 添加 Rust WebAssembly target
+# Compile WASM:
+# Add Rust WebAssembly target
 rustup target add wasm32-unknown-unknown
-# 安装 wasm-bindgen 命令行工具
+# Install wasm-bindgen command line tool
 cargo install -f wasm-bindgen-cli --version 0.2.92
 
-# 运行：
-# 先安装 http server
+# Run:
+# First install the http server
 cargo install basic-http-server
-# 然后使用下边的脚本运行
+# Then run using the following script
 sh ./run-wasm.sh
 
-# 构建 release 包
+# Build the release package
 sh ./build-wasm.sh
 ```
+
+
+## Compatible Bevy versions
+
+| Bevy version | `bevy-in-web-worker` version |
+|:-------------|:--------------------------|
+| `0.14 dev`   | `0.1`                     |
