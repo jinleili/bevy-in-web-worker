@@ -99,7 +99,7 @@ pub fn is_preparation_completed(ptr: u64) -> u32 {
         let mut windows_system_state: SystemState<Query<(Entity, &Window)>> =
             SystemState::from_world(app.world_mut());
         let (entity, _) = windows_system_state.get(app.world_mut()).single();
-        app.window = entity.clone();
+        app.window = entity;
 
         return 1;
     }
@@ -186,7 +186,7 @@ pub fn set_selection(ptr: u64, arr: js_sys::Array) {
 pub fn set_auto_animation(ptr: u64, needs_animate: u32) {
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
     let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
-    active_info.auto_animate = if needs_animate > 0 { true } else { false };
+    active_info.auto_animate = needs_animate > 0;
 }
 
 /// 帧绘制
@@ -263,5 +263,5 @@ fn bigint_to_u64(value: JsValue) -> Result<u64, JsValue> {
             return Ok(number);
         }
     }
-    return Err(JsValue::from_str("Value is not a valid u64"));
+    Err(JsValue::from_str("Value is not a valid u64"))
 }

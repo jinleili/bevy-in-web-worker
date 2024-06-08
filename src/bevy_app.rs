@@ -53,11 +53,7 @@ pub(crate) struct ActiveState {
 
 impl ActiveState {
     fn is_active(&self) -> bool {
-        if self.hover || self.selected {
-            true
-        } else {
-            false
-        }
+        self.hover || self.selected
     }
 }
 
@@ -178,7 +174,7 @@ fn render_active_shapes(mut gizmos: Gizmos, query: Query<(&Shape, &Transform, &A
         let translation = transform.translation.xyz();
         match shape {
             Shape::Box(cuboid) => {
-                gizmos.primitive_3d(*cuboid, translation, transform.rotation, color);
+                gizmos.primitive_3d(cuboid, translation, transform.rotation, color);
             } // Shape::Capsule(c) => {
               //     gizmos.primitive_3d(*c, translation, transform.rotation, color);
               // }
@@ -231,7 +227,6 @@ impl Deref for CurrentVolume {
 fn update_aabbes(
     mut commands: Commands,
     mut config_store: ResMut<GizmoConfigStore>,
-
     query: Query<(Entity, &Shape, &Transform), Or<(Changed<Shape>, Changed<Transform>)>>,
 ) {
     for (_, config, _) in config_store.iter_mut() {

@@ -3,6 +3,8 @@ wasm/*
 wasm-no-modules/*
 public/bevy_in_web_worker_bg.wasm
 public/bevy_in_web_worker.js
+public/bevy_in_main_thread.js
+
 bevy_mod_raycast/
 debug.xcodeproj/
 

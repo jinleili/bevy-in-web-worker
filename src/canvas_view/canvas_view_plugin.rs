@@ -53,7 +53,7 @@ pub fn create_canvas_window(app: &mut App) {
         };
 
         // Update resolution of bevy window
-        window.resolution.set_scale_factor(scale_factor as f32);
+        window.resolution.set_scale_factor(scale_factor);
         window.resolution.set(logical_res.0, logical_res.1);
 
         let raw_window_wrapper = match app_view {

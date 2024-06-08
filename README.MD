@@ -1,5 +1,5 @@
 # Bevy in Web Worker
-[简体中文](README_zh.md)
+[README 中文](README_zh.md)
 
 Showcasing how to run the `Bevy` App within a `Web Worker` and the interaction between HTML elements and Bevy.
 
@@ -53,4 +53,4 @@ sh ./build-wasm.sh
 
 | Bevy version | `bevy-in-web-worker` version |
 |:-------------|:--------------------------|
-| `0.14 dev`   | `0.1`                     |
+| `0.14`       | `0.1`                     |

@@ -24,7 +24,7 @@ fn mouse_events_system(
     mut query: Query<(Entity, &CurrentVolume, &mut Transform), With<ActiveState>>,
 ) {
     // 对于拖动，只使用最后一条 move 事件就能得到最终的移动偏移量
-    if app_info.drag != Entity::PLACEHOLDER && cursor_moved_events.len() > 0 {
+    if app_info.drag != Entity::PLACEHOLDER && !cursor_moved_events.is_empty() {
         let last_cursor_event: Option<&CursorMoved> = cursor_moved_events.read().last();
         if let Some(last_move) = last_cursor_event {
             let (camera, global_transform) = cameras.get_single().unwrap();
@@ -56,7 +56,7 @@ fn mouse_events_system(
         // 计算射线拾取
         for (entity, volume, _) in query.iter_mut() {
             // 射线求交
-            let toi = ray_cast.aabb_intersection_at(&volume);
+            let toi = ray_cast.aabb_intersection_at(volume);
 
             // 刻意不在此时设置 hover，收集到所有 pick 到的 entity 发送给主线程，
             // 由主线程决定需要 hover 的对象后再发送回对应的 entity
@@ -68,7 +68,7 @@ fn mouse_events_system(
         }
     }
 
-    if list.len() > 0 {
+    if !list.is_empty() {
         // 通知 js pick 结果
         let js_array = js_sys::Array::new();
         for (_, &item) in list.iter() {
