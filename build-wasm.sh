@@ -1,6 +1,6 @@
 set -e 
 
-RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build --no-default-features --profile wasm-release \
+cargo build --no-default-features --profile wasm-release \
 --target wasm32-unknown-unknown 
 
 # Generate bindings

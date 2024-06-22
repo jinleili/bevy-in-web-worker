@@ -2,7 +2,7 @@ set -e
 
 # worker 中运行时，debug 模式下会有前几帧须要拉长帧时间间隔的问题
 # https://github.com/bevyengine/bevy/issues/13345
-RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build --no-default-features \
+cargo build --no-default-features \
 --target wasm32-unknown-unknown 
 
 # Generate bindings
