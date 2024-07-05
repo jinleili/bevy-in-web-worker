@@ -19,4 +19,3 @@ cp wasm-no-modules/bevy_in_web_worker.js public/bevy_in_web_worker.js
 cp wasm/bevy_in_web_worker_bg.wasm public/bevy_in_web_worker_bg.wasm
 
 basic-http-server public
-

@@ -11,9 +11,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 raw-window-handle = "0.6.2"
-wgpu = "0.19.4"
+wgpu = "0.20"
 #bevy = { git = "https://github.com/bevyengine/bevy", rev = "104dcf5a6732ad8c77c22d098a2fe300e7c5c377", features = [
-bevy = { version = "0.14.0-rc.2", features = [
+bevy = { version = "0.14", features = [
     "bevy_pbr",
     # "bevy_ui",
     # "bevy_sprite",

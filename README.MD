@@ -1,5 +1,5 @@
 # Bevy in Web Worker
-[README 中文](./README_zh.md)
+[README 中文](./zh.md)
 
 Showcasing how to run the `Bevy` App within a `Web Worker` and the interaction between HTML elements and Bevy.
 
