@@ -2,7 +2,7 @@
 name = "bevy-in-web-worker"
 description = "bevy +  web worker"
 authors = ["Jinlei Li"]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.78"
 
@@ -10,26 +10,23 @@ rust-version = "1.78"
 crate-type = ["cdylib"]
 
 [dependencies]
-raw-window-handle = "0.6.2"
-wgpu = "0.20"
-#bevy = { git = "https://github.com/bevyengine/bevy", rev = "104dcf5a6732ad8c77c22d098a2fe300e7c5c377", features = [
-bevy = { version = "0.14", features = [
+raw-window-handle = "0.6"
+wgpu = "23"
+bevy = { version = "0.15", features = [
     "bevy_pbr",
-    # "bevy_ui",
-    # "bevy_sprite",
     "bevy_gizmos",
-    # "ktx2",
     "tonemapping_luts",
     "webgpu",
+    "bevy_window",
 ], default-features = false }
 uuid = { version = "1.7.0", features = ["v4"] }
 rand = "0.8"
 # Web only
-wasm-bindgen = "0.2.92"
-wasm-bindgen-futures = "0.4.42"
+wasm-bindgen = "0.2.97"
+wasm-bindgen-futures = "0.4.47"
 console_error_panic_hook = "0.1.7"
-console_log = "1.0.0"
-web-sys = { version = "0.3.67", features = [
+console_log = "1"
+web-sys = { version = "0.3.74", features = [
     "Window",
     "Document",
     "Element",
@@ -44,7 +41,7 @@ web-sys = { version = "0.3.67", features = [
     "BlobPropertyBag",
     "Url",
 ] }
-js-sys = "0.3.69"
+js-sys = "0.3.74"
 
 [profile.wasm-release]
 inherits = "release"

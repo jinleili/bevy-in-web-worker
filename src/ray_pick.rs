@@ -53,6 +53,8 @@ fn mouse_events_system(
         let (camera, transform) = cameras.get_single().unwrap();
         let ray = ray_from_screenspace(event.position, camera, transform).unwrap();
         let ray_cast = RayCast3d::from_ray(ray, 30.);
+        info!("ray_cast");
+
         // 计算射线拾取
         for (entity, volume, _) in query.iter_mut() {
             // 射线求交
@@ -61,7 +63,7 @@ fn mouse_events_system(
             // 刻意不在此时设置 hover，收集到所有 pick 到的 entity 发送给主线程，
             // 由主线程决定需要 hover 的对象后再发送回对应的 entity
             // status.hover = toi.is_some();
-
+            info!("toi: {:?}, entity: {:?}", toi, entity);
             if toi.is_some() {
                 list.insert(entity, entity.to_bits());
             }
@@ -106,6 +108,7 @@ fn ray_from_screenspace(
     camera
         .viewport_to_world(camera_transform, viewport_pos)
         .map(Ray3d::from)
+        .ok()
 }
 
 fn screen_to_world(

@@ -106,44 +106,40 @@ fn setup(
                     (3.0 - y as f32) * 3. - 2.0,
                     2. + 4.5 * z as f32,
                 );
+
                 commands.spawn((
-                    PbrBundle {
-                        mesh: mesh.clone(),
-                        material: debug_material.clone(),
-                        transform: transform.with_rotation(Quat::from_rotation_x(-PI / 4.)),
-                        ..default()
-                    },
-                    shape.clone(),
+                    Mesh3d(mesh),
+                    MeshMaterial3d(debug_material.clone()),
+                    transform.with_rotation(Quat::from_rotation_x(-PI / 4.)),
+                    shape,
                     ActiveState::default(),
                 ));
             }
         }
     }
 
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
+    commands.spawn((
+        PointLight {
             shadows_enabled: true,
             intensity: 20_000_000.,
             range: 100.0,
             shadow_depth_bias: 0.2,
             ..default()
         },
-        transform: Transform::from_xyz(8.0, 4.0, 16.0),
-        ..default()
-    });
+        Transform::from_xyz(8.0, 4.0, 16.0),
+    ));
 
     // ground plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Plane3d::default().mesh().size(50.0, 50.0)),
-        material: materials.add(Color::from(SILVER)),
-        transform: Transform::IDENTITY.with_rotation(Quat::from_rotation_x(PI / 2.)),
-        ..default()
-    });
+    commands.spawn((
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(50.0, 50.0).subdivisions(10))),
+        MeshMaterial3d(materials.add(Color::from(SILVER))),
+        Transform::IDENTITY.with_rotation(Quat::from_rotation_x(PI / 2.)),
+    ));
 
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, -9., 18.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
-        ..default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, -9., 18.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+    ));
 }
 
 fn rotate(
@@ -156,7 +152,7 @@ fn rotate(
     }
 
     for mut transform in &mut query {
-        transform.rotate_y(time.delta_seconds() / 2.);
+        transform.rotate_y(time.delta_secs() / 2.);
     }
 }
 
@@ -174,7 +170,11 @@ fn render_active_shapes(mut gizmos: Gizmos, query: Query<(&Shape, &Transform, &A
         let translation = transform.translation.xyz();
         match shape {
             Shape::Box(cuboid) => {
-                gizmos.primitive_3d(cuboid, translation, transform.rotation, color);
+                gizmos.primitive_3d(
+                    cuboid,
+                    Isometry3d::new(translation, transform.rotation),
+                    color,
+                );
             } // Shape::Capsule(c) => {
               //     gizmos.primitive_3d(*c, translation, transform.rotation, color);
               // }
@@ -238,7 +238,7 @@ fn update_aabbes(
         let rotation = transform.rotation;
 
         let aabb = match shape {
-            Shape::Box(b) => b.aabb_3d(translation, rotation),
+            Shape::Box(b) => b.aabb_3d(Isometry3d::new(translation, rotation)),
         };
         commands.entity(entity).insert(CurrentVolume(aabb));
     }

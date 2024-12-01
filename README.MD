@@ -53,4 +53,5 @@ sh ./build-wasm.sh
 
 | Bevy version | `bevy-in-web-worker` version |
 |:-------------|:--------------------------|
+| `0.15`       | `0.2`                     |
 | `0.14`       | `0.1`                     |
