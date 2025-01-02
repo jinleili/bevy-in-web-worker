@@ -35,7 +35,7 @@
 # 添加 Rust WebAssembly target
 rustup target add wasm32-unknown-unknown
 # 安装 wasm-bindgen 命令行工具
-cargo install -f wasm-bindgen-cli --version 0.2.97
+cargo install -f wasm-bindgen-cli --version 0.2.99
 
 # 运行：
 # 先安装 http server

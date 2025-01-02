@@ -1,5 +1,5 @@
 use crate::bevy_app::init_app;
-use crate::{canvas::*, canvas_view, create_canvas_window, ActiveInfo, WorkerApp};
+use crate::{canvas_view::*, create_canvas_window, ActiveInfo, WorkerApp};
 use bevy::app::PluginsState;
 use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
@@ -36,7 +36,7 @@ extern "C" {
 pub fn init_bevy_app() -> u64 {
     let mut app = init_app();
     // 添加自定义的 canvas 窗口插件
-    app.add_plugins(canvas_view::CanvasViewPlugin);
+    app.add_plugins(CanvasViewPlugin);
 
     info!("init_bevy_app");
 

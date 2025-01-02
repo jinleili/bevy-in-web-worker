@@ -224,6 +224,7 @@ impl Deref for CurrentVolume {
 }
 
 /// 更新 aabb
+#[allow(clippy::type_complexity)]
 fn update_aabbes(
     mut commands: Commands,
     mut config_store: ResMut<GizmoConfigStore>,

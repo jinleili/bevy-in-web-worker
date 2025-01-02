@@ -1,4 +1,4 @@
-use super::canvas::*;
+use super::*;
 use bevy::ecs::entity::Entity;
 use bevy::utils::HashMap;
 

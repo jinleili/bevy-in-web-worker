@@ -1,4 +1,4 @@
-use super::{canvas::*, CanvasViews};
+use super::*;
 use bevy::app::{App, Plugin};
 use bevy::ecs::{
     entity::Entity,
@@ -54,7 +54,9 @@ pub fn create_canvas_window(app: &mut App) {
 
         // Update resolution of bevy window
         window.resolution.set_scale_factor(scale_factor);
-        window.resolution.set(logical_res.0, logical_res.1);
+        window
+            .resolution
+            .set(logical_res.0 as f32, logical_res.1 as f32);
 
         let raw_window_wrapper = match app_view {
             ViewObj::Canvas(window_wrapper) => RawHandleWrapper::new(window_wrapper),

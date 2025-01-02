@@ -36,7 +36,7 @@ Implemented `CanvasViewPlugin` to replace `bevy_winit`, allowing the Bevy engine
 # Add Rust WebAssembly target
 rustup target add wasm32-unknown-unknown
 # Install wasm-bindgen command line tool
-cargo install -f wasm-bindgen-cli --version 0.2.97
+cargo install -f wasm-bindgen-cli --version 0.2.99
 
 # Run:
 # First install the http server
