@@ -3,31 +3,33 @@ name = "bevy-in-web-worker"
 description = "bevy +  web worker"
 authors = ["Jinlei Li"]
 version = "0.2.0"
-edition = "2021"
-rust-version = "1.78"
+edition = "2024"
+# rust-version = "1.78"
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-app-surface = { version = "1.3.3", features = ["web_rwh"] }
+app-surface = { version = "1.5.3", features = ["web_rwh"] }
 raw-window-handle = "0.6"
-wgpu = "23"
-bevy = { version = "0.15", features = [
+wgpu = "24"
+bevy = { version = "0.16.0-rc.1", features = [
+    "std",
     "bevy_pbr",
     "bevy_gizmos",
     "tonemapping_luts",
     "webgpu",
     "bevy_window",
+    "bevy_log",
 ], default-features = false }
 uuid = { version = "1.7.0", features = ["v4"] }
 rand = "0.8"
 # Web only
-wasm-bindgen = "0.2.99"
-wasm-bindgen-futures = "0.4.49"
+wasm-bindgen = "0.2.100"
+wasm-bindgen-futures = "0.4.50"
 console_error_panic_hook = "0.1.7"
 console_log = "1"
-web-sys = { version = "0.3.76", features = [
+web-sys = { version = "0.3.77", features = [
     "Window",
     "Document",
     "Element",
@@ -42,7 +44,7 @@ web-sys = { version = "0.3.76", features = [
     "BlobPropertyBag",
     "Url",
 ] }
-js-sys = "0.3.76"
+js-sys = "0.3.77"
 
 [profile.wasm-release]
 inherits = "release"
@@ -50,3 +52,15 @@ opt-level = "z"
 lto = "fat"
 # lto = true
 codegen-units = 1
+
+
+# works
+[profile.dev-opt]
+inherits = "release"
+debug-assertions = false # breaks build if true
+opt-level = 1
+lto = false
+# lto = true
+codegen-units = 256
+debug = true
+overflow-checks = true

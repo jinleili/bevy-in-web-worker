@@ -3,10 +3,11 @@ set -e
 # worker 中运行时，debug 模式下会有前几帧须要拉长帧时间间隔的问题
 # https://github.com/bevyengine/bevy/issues/13345
 cargo build --no-default-features \
---target wasm32-unknown-unknown 
+--profile dev-opt \
+--target wasm32-unknown-unknown
 
 # Generate bindings
-for i in target/wasm32-unknown-unknown/debug/*.wasm;
+for i in target/wasm32-unknown-unknown/dev-opt/*.wasm;
 do
     wasm-bindgen --no-typescript --out-dir wasm --web "$i";
     # Worker 中加载的脚本无法使用 ES6 module

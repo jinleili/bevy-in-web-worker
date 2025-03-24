@@ -1,9 +1,10 @@
 use crate::{
+    ActiveInfo,
     bevy_app::{ActiveState, CurrentVolume},
-    send_pick_from_rust, send_pick_from_worker, ActiveInfo,
+    send_pick_from_rust, send_pick_from_worker,
 };
 use bevy::math::bounding::RayCast3d;
-use bevy::utils::hashbrown::HashMap;
+use bevy::platform_support::collections::HashMap;
 use bevy::{input::mouse::MouseWheel, prelude::*};
 use wasm_bindgen::JsValue;
 
@@ -27,7 +28,7 @@ fn mouse_events_system(
     if app_info.drag != Entity::PLACEHOLDER && !cursor_moved_events.is_empty() {
         let last_cursor_event: Option<&CursorMoved> = cursor_moved_events.read().last();
         if let Some(last_move) = last_cursor_event {
-            let (camera, global_transform) = cameras.get_single().unwrap();
+            let (camera, global_transform) = cameras.single().unwrap();
 
             for (entity, _, mut transform) in query.iter_mut() {
                 if app_info.drag == entity {
@@ -47,10 +48,10 @@ fn mouse_events_system(
 
     // hover 列表
     // 鼠标事件的频率通常比 render 高，使用 HashMap 是为了避免 pick 结果有重复
-    let mut list: HashMap<Entity, u64> = HashMap::new();
+    let mut list: HashMap<Entity, u64> = HashMap::default();
 
     for event in cursor_moved_events.read() {
-        let (camera, transform) = cameras.get_single().unwrap();
+        let (camera, transform) = cameras.single().unwrap();
         let ray = ray_from_screenspace(event.position, camera, transform).unwrap();
         let ray_cast = RayCast3d::from_ray(ray, 30.);
         info!("ray_cast");

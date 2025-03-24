@@ -231,7 +231,7 @@ fn update_aabbes(
     query: Query<(Entity, &Shape, &Transform), Or<(Changed<Shape>, Changed<Transform>)>>,
 ) {
     for (_, config, _) in config_store.iter_mut() {
-        config.line_width = 3.;
+        config.line.width = 3.;
     }
 
     for (entity, shape, transform) in query.iter() {

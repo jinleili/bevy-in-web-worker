@@ -1,4 +1,7 @@
-use bevy::{ecs::system::SystemState, prelude::*, utils::HashMap, window::WindowCloseRequested};
+use bevy::{
+    ecs::system::SystemState, platform_support::collections::HashMap, prelude::*,
+    window::WindowCloseRequested,
+};
 use std::ops::{Deref, DerefMut};
 
 mod web_ffi;
@@ -68,8 +71,8 @@ pub(crate) struct ActiveInfo {
 impl ActiveInfo {
     pub fn new() -> Self {
         ActiveInfo {
-            hover: HashMap::new(),
-            selection: HashMap::new(),
+            hover: HashMap::default(),
+            selection: HashMap::default(),
             drag: Entity::PLACEHOLDER,
             last_drag_pos: Vec2::ZERO,
             is_in_worker: false,

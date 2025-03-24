@@ -1,9 +1,9 @@
 use crate::bevy_app::init_app;
-use crate::{canvas_view::*, create_canvas_window, ActiveInfo, WorkerApp};
+use crate::{ActiveInfo, WorkerApp, canvas_view::*, create_canvas_window};
 use bevy::app::PluginsState;
 use bevy::ecs::system::SystemState;
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 use js_sys::BigInt;
 use wasm_bindgen::prelude::*;
 
@@ -98,10 +98,10 @@ pub fn is_preparation_completed(ptr: u64) -> u32 {
         // 将 window 对象直接存到 app 上, 避免后继查询
         let mut windows_system_state: SystemState<Query<(Entity, &Window)>> =
             SystemState::from_world(app.world_mut());
-        let (entity, _) = windows_system_state.get(app.world_mut()).single();
-        app.window = entity;
-
-        return 1;
+        if let Ok((entity, _)) = windows_system_state.get(app.world_mut()).single() {
+            app.window = entity;
+            return 1;
+        }
     }
     0
 }
@@ -136,7 +136,7 @@ pub fn left_bt_down(ptr: u64, obj: JsValue, x: f32, y: f32) {
         active_info.drag = entity;
         active_info.last_drag_pos = position;
         // 当前要 drap 的对象同时也是 selection 对象
-        let mut map: HashMap<Entity, u64> = HashMap::new();
+        let mut map: HashMap<Entity, u64> = HashMap::default();
         map.insert(entity, 0);
         active_info.selection = map;
     }
@@ -240,7 +240,7 @@ pub fn release_app(ptr: u64) {
 
 /// 将 js 数组转换为 rust HashMap
 fn to_map(arr: js_sys::Array) -> HashMap<Entity, u64> {
-    let mut map: HashMap<Entity, u64> = HashMap::new();
+    let mut map: HashMap<Entity, u64> = HashMap::default();
     let length = arr.length();
     for i in 0..length {
         let value = bigint_to_u64(arr.get(i));
