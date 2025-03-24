@@ -1,6 +1,6 @@
-use uuid::Uuid;
 use app_surface::{CanvasWrapper, OffscreenCanvasWrapper};
 use bevy::window::WindowWrapper;
+use uuid::Uuid;
 
 pub(crate) use app_surface::{Canvas, OffscreenCanvas};
 
@@ -35,4 +35,3 @@ impl ViewObj {
         ViewObj::Offscreen(WindowWrapper::new(OffscreenCanvasWrapper::new(canvas)))
     }
 }
-

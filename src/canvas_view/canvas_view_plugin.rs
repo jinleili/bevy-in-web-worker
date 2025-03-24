@@ -6,7 +6,7 @@ use bevy::ecs::{
     prelude::*,
     system::{Commands, NonSendMut, Query, SystemState},
 };
-use bevy::window::{exit_on_all_closed, RawHandleWrapper, Window, WindowClosed, WindowCreated};
+use bevy::window::{RawHandleWrapper, Window, WindowClosed, WindowCreated, exit_on_all_closed};
 
 pub struct CanvasViewPlugin;
 
@@ -45,15 +45,16 @@ pub fn create_canvas_window(app: &mut App) {
         }
 
         let app_view = canvas_views.create_window(view_obj, entity);
-        let (logical_res, scale_factor) = match app_view {
-            ViewObj::Canvas(canvas) => (canvas.logical_resolution(), canvas.scale_factor),
+        let (logical_res, _scale_factor) = match app_view {
+            ViewObj::Canvas(canvas) => (canvas.physical_resolution(), canvas.scale_factor),
             ViewObj::Offscreen(offscreen) => {
-                (offscreen.logical_resolution(), offscreen.scale_factor)
+                (offscreen.physical_resolution(), offscreen.scale_factor)
             }
         };
 
         // Update resolution of bevy window
-        window.resolution.set_scale_factor(scale_factor);
+        // I think scale is already handled in index.js by devicePixelRatio
+        window.resolution.set_scale_factor(1.0);
         window
             .resolution
             .set(logical_res.0 as f32, logical_res.1 as f32);
@@ -65,7 +66,7 @@ pub fn create_canvas_window(app: &mut App) {
 
         commands.entity(entity).insert(raw_window_wrapper.unwrap());
 
-        created_window_events.send(WindowCreated { window: entity });
+        created_window_events.write(WindowCreated { window: entity });
         break;
     }
     create_window_system_state.apply(app.world_mut());
@@ -81,7 +82,7 @@ pub(crate) fn despawn_window(
         crate::web_ffi::log("Closing window {:?entity}");
         if !window_entities.contains(entity) {
             app_views.remove_view(entity);
-            close_events.send(WindowClosed { window: entity });
+            close_events.write(WindowClosed { window: entity });
         }
     }
 }
