@@ -1,6 +1,6 @@
 use super::*;
 use bevy::ecs::entity::Entity;
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 
 #[derive(Debug, Default)]
 pub struct CanvasViews {

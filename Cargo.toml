@@ -10,10 +10,10 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
-app-surface = { version = "1.5.3", features = ["web_rwh"] }
+app-surface = { version = "=1.5.3", features = ["web_rwh"] }
 raw-window-handle = "0.6"
 wgpu = "24"
-bevy = { version = "0.16.0-rc.1", features = [
+bevy = { version = "0.16", features = [
     "std",
     "bevy_pbr",
     "bevy_gizmos",

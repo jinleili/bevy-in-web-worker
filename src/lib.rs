@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::system::SystemState, platform_support::collections::HashMap, prelude::*,
+    ecs::system::SystemState, platform::collections::HashMap, prelude::*,
     window::WindowCloseRequested,
 };
 use std::ops::{Deref, DerefMut};

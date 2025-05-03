@@ -2,7 +2,7 @@ use crate::bevy_app::init_app;
 use crate::{ActiveInfo, WorkerApp, canvas_view::*, create_canvas_window};
 use bevy::app::PluginsState;
 use bevy::ecs::system::SystemState;
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use js_sys::BigInt;
 use wasm_bindgen::prelude::*;

@@ -4,7 +4,7 @@ use crate::{
     send_pick_from_rust, send_pick_from_worker,
 };
 use bevy::math::bounding::RayCast3d;
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::{input::mouse::MouseWheel, prelude::*};
 use wasm_bindgen::JsValue;
 
