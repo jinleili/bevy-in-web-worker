@@ -48,10 +48,13 @@ js-sys = "0.3.77"
 
 [profile.wasm-release]
 inherits = "release"
+debug = 0
 opt-level = "z"
+strip = "debuginfo"
 lto = "fat"
 # lto = true
 codegen-units = 1
+panic = "abort"
 
 
 # works
