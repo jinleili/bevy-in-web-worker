@@ -117,7 +117,7 @@ pub fn mouse_move(ptr: u64, x: f32, y: f32) {
         position,
         delta: None,
     };
-    app.world_mut().send_event(cursor_move);
+    app.world_mut().write_message(cursor_move);
 
     let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
     active_info.remaining_frames = 10;

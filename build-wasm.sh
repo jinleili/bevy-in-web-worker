@@ -1,7 +1,7 @@
 set -e 
 
-cargo build --no-default-features --profile wasm-release \
---target wasm32-unknown-unknown 
+RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
+cargo build --no-default-features --profile wasm-release --target wasm32-unknown-unknown 
 
 # Generate bindings
 for i in target/wasm32-unknown-unknown/wasm-release/*.wasm;

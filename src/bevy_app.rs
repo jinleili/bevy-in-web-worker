@@ -3,13 +3,11 @@ use crate::{ActiveInfo, WorkerApp};
 use bevy::color::palettes::css::BLANCHED_ALMOND;
 use bevy::color::palettes::tailwind::BLUE_400;
 use bevy::{
+    asset::RenderAssetUsages,
     color::palettes::basic::SILVER,
     math::bounding::{Aabb3d, Bounded3d},
     prelude::*,
-    render::{
-        render_asset::RenderAssetUsages,
-        render_resource::{Extent3d, TextureDimension, TextureFormat},
-    },
+    render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
 use rand::Rng;
 use std::f32::consts::PI;
@@ -93,12 +91,12 @@ fn setup(
     ];
 
     let num_shapes = meshe_handles.len();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for i in 0..num_shapes {
         for y in 0..5 {
             for z in 0..1 {
-                let index = rng.gen_range(0..num_shapes);
+                let index = rng.random_range(0..num_shapes);
                 let mesh = meshe_handles[index].to_owned();
                 let shape = shapes[index].to_owned();
                 let transform = Transform::from_xyz(

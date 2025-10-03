@@ -2,9 +2,8 @@ set -e
 
 # worker 中运行时，debug 模式下会有前几帧须要拉长帧时间间隔的问题
 # https://github.com/bevyengine/bevy/issues/13345
-cargo build --no-default-features \
---profile dev-opt \
---target wasm32-unknown-unknown
+RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
+cargo build --no-default-features --profile dev-opt --target wasm32-unknown-unknown
 
 # Generate bindings
 for i in target/wasm32-unknown-unknown/dev-opt/*.wasm;

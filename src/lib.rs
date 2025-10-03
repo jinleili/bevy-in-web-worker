@@ -88,7 +88,7 @@ pub(crate) fn close_bevy_window(mut app: Box<App>) {
     let windows = windows_state.get_mut(app.world_mut());
     let (entity, _window) = windows.iter().last().unwrap();
     app.world_mut()
-        .send_event(WindowCloseRequested { window: entity });
+        .write_message(WindowCloseRequested { window: entity });
     windows_state.apply(app.world_mut());
 
     app.update();

@@ -4,32 +4,36 @@ description = "bevy +  web worker"
 authors = ["Jinlei Li"]
 version = "0.2.0"
 edition = "2024"
-# rust-version = "1.78"
+rust-version = "1.88"
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-app-surface = { version = "=1.5.3", features = ["web_rwh"] }
+app-surface = { version = "=1.7.2", features = ["web_rwh"] }
 raw-window-handle = "0.6"
-wgpu = "24"
-bevy = { version = "0.16", features = [
-    "std",
+wgpu = "26"
+bevy = { version = "0.17", features = [
     "bevy_pbr",
     "bevy_gizmos",
     "tonemapping_luts",
     "webgpu",
     "bevy_window",
     "bevy_log",
+    "zstd_rust",
 ], default-features = false }
-uuid = { version = "1.7.0", features = ["v4"] }
-rand = "0.8"
+uuid = { version = "1.18", features = ["v4"] }
+# 为了让 uuid 及 rand 支持 web 环境
+getrandom = { version = "0.3.3", default-features = false, features = [
+    "wasm_js",
+] }
+rand = "0.9"
 # Web only
-wasm-bindgen = "0.2.100"
-wasm-bindgen-futures = "0.4.50"
+wasm-bindgen = "0.2.101"
+wasm-bindgen-futures = "0.4.51"
 console_error_panic_hook = "0.1.7"
 console_log = "1"
-web-sys = { version = "0.3.77", features = [
+web-sys = { version = "0.3.78", features = [
     "Window",
     "Document",
     "Element",
@@ -44,7 +48,7 @@ web-sys = { version = "0.3.77", features = [
     "BlobPropertyBag",
     "Url",
 ] }
-js-sys = "0.3.77"
+js-sys = "0.3.78"
 
 [profile.wasm-release]
 inherits = "release"
@@ -60,10 +64,8 @@ panic = "abort"
 # works
 [profile.dev-opt]
 inherits = "release"
-debug-assertions = false # breaks build if true
 opt-level = 1
 lto = false
-# lto = true
 codegen-units = 256
 debug = true
 overflow-checks = true

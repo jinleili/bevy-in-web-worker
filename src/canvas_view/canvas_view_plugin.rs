@@ -2,7 +2,7 @@ use super::*;
 use bevy::app::{App, Plugin};
 use bevy::ecs::{
     entity::Entity,
-    event::EventWriter,
+    message::MessageWriter,
     prelude::*,
     system::{Commands, NonSendMut, Query, SystemState},
 };
@@ -33,7 +33,7 @@ pub fn create_canvas_window(app: &mut App) {
     let mut create_window_system_state: SystemState<(
         Commands,
         Query<(Entity, &mut Window), Added<Window>>,
-        EventWriter<WindowCreated>,
+        MessageWriter<WindowCreated>,
         NonSendMut<CanvasViews>,
     )> = SystemState::from_world(app.world_mut());
     let (mut commands, mut new_windows, mut created_window_events, mut canvas_views) =
@@ -75,7 +75,7 @@ pub fn create_canvas_window(app: &mut App) {
 pub(crate) fn despawn_window(
     mut closed: RemovedComponents<Window>,
     window_entities: Query<&Window>,
-    mut close_events: EventWriter<WindowClosed>,
+    mut close_events: MessageWriter<WindowClosed>,
     mut app_views: NonSendMut<CanvasViews>,
 ) {
     for entity in closed.read() {

@@ -6,6 +6,7 @@ use crate::{
 use bevy::math::bounding::RayCast3d;
 use bevy::platform::collections::HashMap;
 use bevy::{input::mouse::MouseWheel, prelude::*};
+use bevy::ecs::message::MessageReader;
 use wasm_bindgen::JsValue;
 
 /// 基于 ray pick 的 hover / 选中 / 拖动
@@ -18,8 +19,8 @@ impl Plugin for RayPickPlugin {
 }
 
 fn mouse_events_system(
-    mut cursor_moved_events: EventReader<CursorMoved>,
-    mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut cursor_moved_events: MessageReader<CursorMoved>,
+    mut mouse_wheel_events: MessageReader<MouseWheel>,
     mut app_info: ResMut<ActiveInfo>,
     cameras: Query<(&Camera, &GlobalTransform)>,
     mut query: Query<(Entity, &CurrentVolume, &mut Transform), With<ActiveState>>,
