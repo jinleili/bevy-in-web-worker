@@ -230,6 +230,8 @@ fn update_aabbes(
 ) {
     for (_, config, _) in config_store.iter_mut() {
         config.line.width = 3.;
+        // Render gizmos slightly in front of meshes so bbox wireframes stay visible.
+        config.depth_bias = -0.01;
     }
 
     for (entity, shape, transform) in query.iter() {

@@ -3,10 +3,11 @@ use crate::{
     bevy_app::{ActiveState, CurrentVolume},
     send_pick_from_rust, send_pick_from_worker,
 };
+use bevy::ecs::message::MessageReader;
 use bevy::math::bounding::RayCast3d;
 use bevy::platform::collections::HashMap;
 use bevy::{input::mouse::MouseWheel, prelude::*};
-use bevy::ecs::message::MessageReader;
+use js_sys::BigInt;
 use wasm_bindgen::JsValue;
 
 /// 基于 ray pick 的 hover / 选中 / 拖动
@@ -26,9 +27,8 @@ fn mouse_events_system(
     mut query: Query<(Entity, &CurrentVolume, &mut Transform), With<ActiveState>>,
 ) {
     // 对于拖动，只使用最后一条 move 事件就能得到最终的移动偏移量
-    if app_info.drag != Entity::PLACEHOLDER && !cursor_moved_events.is_empty() {
-        let last_cursor_event: Option<&CursorMoved> = cursor_moved_events.read().last();
-        if let Some(last_move) = last_cursor_event {
+    if app_info.drag != Entity::PLACEHOLDER {
+        if let Some(last_move) = cursor_moved_events.read().last() {
             let (camera, global_transform) = cameras.single().unwrap();
 
             for (entity, _, mut transform) in query.iter_mut() {
@@ -76,7 +76,9 @@ fn mouse_events_system(
         // 通知 js pick 结果
         let js_array = js_sys::Array::new();
         for (_, &item) in list.iter() {
-            js_array.push(&JsValue::from(item));
+            // Entity bits are u64; send as BigInt to avoid losing precision in JS Numbers.
+            let id: JsValue = BigInt::from(item).into();
+            js_array.push(&id);
         }
         if app_info.is_in_worker {
             send_pick_from_worker(js_array);
@@ -93,7 +95,7 @@ fn mouse_events_system(
 fn update_active(active_info: ResMut<ActiveInfo>, mut query: Query<(Entity, &mut ActiveState)>) {
     for (entity, mut status) in query.iter_mut() {
         status.hover = active_info.hover.contains_key(&entity);
-        status.selected = active_info.selection.contains_key(&entity)
+        status.selected = active_info.selection.contains_key(&entity);
     }
 }
 

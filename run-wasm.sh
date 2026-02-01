@@ -18,4 +18,5 @@ cp wasm-no-modules/bevy_in_web_worker.js public/bevy_in_web_worker.js
 # 两份 js 共用同一个 wasm
 cp wasm/bevy_in_web_worker_bg.wasm public/bevy_in_web_worker_bg.wasm
 
-basic-http-server public
+ADDR=${BASIC_HTTP_ADDR:-127.0.0.1:4000}
+basic-http-server -a "$ADDR" public

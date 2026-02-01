@@ -110,8 +110,8 @@ pub fn is_preparation_completed(ptr: u64) -> u32 {
 #[wasm_bindgen]
 pub fn mouse_move(ptr: u64, x: f32, y: f32) {
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
-    // 提前将逻辑像转换成物理像素
-    let position = app.to_physical_size(x, y);
+    // Bevy 0.18: CursorMoved.position uses logical pixels
+    let position = Vec2::new(x, y);
     let cursor_move = CursorMoved {
         window: app.window,
         position,
@@ -127,7 +127,7 @@ pub fn mouse_move(ptr: u64, x: f32, y: f32) {
 #[wasm_bindgen]
 pub fn left_bt_down(ptr: u64, obj: JsValue, x: f32, y: f32) {
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
-    let position = app.to_physical_size(x, y);
+    let position = Vec2::new(x, y);
     let mut active_info = app.world_mut().get_resource_mut::<ActiveInfo>().unwrap();
 
     let value = bigint_to_u64(obj);

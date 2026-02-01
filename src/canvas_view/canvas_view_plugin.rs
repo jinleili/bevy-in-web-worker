@@ -45,19 +45,21 @@ pub fn create_canvas_window(app: &mut App) {
         }
 
         let app_view = canvas_views.create_window(view_obj, entity);
-        let (logical_res, _scale_factor) = match app_view {
+        let (physical_res, scale_factor) = match app_view {
             ViewObj::Canvas(canvas) => (canvas.physical_resolution(), canvas.scale_factor),
             ViewObj::Offscreen(offscreen) => {
                 (offscreen.physical_resolution(), offscreen.scale_factor)
             }
         };
 
-        // Update resolution of bevy window
-        // I think scale is already handled in index.js by devicePixelRatio
-        window.resolution.set_scale_factor(1.0);
-        window
-            .resolution
-            .set(logical_res.0 as f32, logical_res.1 as f32);
+        // Bevy 0.18 uses logical pixels for cursor + viewport conversions.
+        // Our DOM canvas is sized in physical pixels (CSS size * devicePixelRatio),
+        // so we set the window scale factor and logical size accordingly.
+        window.resolution.set_scale_factor(scale_factor);
+        window.resolution.set(
+            physical_res.0 as f32 / scale_factor,
+            physical_res.1 as f32 / scale_factor,
+        );
 
         let raw_window_wrapper = match app_view {
             ViewObj::Canvas(window_wrapper) => RawHandleWrapper::new(window_wrapper),
