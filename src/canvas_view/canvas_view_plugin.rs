@@ -12,7 +12,7 @@ pub struct CanvasViewPlugin;
 
 impl Plugin for CanvasViewPlugin {
     fn build(&self, app: &mut App) {
-        app.init_non_send_resource::<CanvasViews>().add_systems(
+        app.init_non_send::<CanvasViews>().add_systems(
             bevy::app::Last,
             (
                 changed_window.ambiguous_with(exit_on_all_closed),
@@ -25,10 +25,7 @@ impl Plugin for CanvasViewPlugin {
 
 #[allow(clippy::type_complexity)]
 pub fn create_canvas_window(app: &mut App) {
-    let view_obj = app
-        .world_mut()
-        .remove_non_send_resource::<ViewObj>()
-        .unwrap();
+    let view_obj = app.world_mut().remove_non_send::<ViewObj>().unwrap();
 
     let mut create_window_system_state: SystemState<(
         Commands,
@@ -37,7 +34,9 @@ pub fn create_canvas_window(app: &mut App) {
         NonSendMut<CanvasViews>,
     )> = SystemState::from_world(app.world_mut());
     let (mut commands, mut new_windows, mut created_window_events, mut canvas_views) =
-        create_window_system_state.get_mut(app.world_mut());
+        create_window_system_state
+            .get_mut(app.world_mut())
+            .expect("window creation system state should be valid");
 
     for (entity, mut window) in new_windows.iter_mut() {
         if canvas_views.get_view(entity).is_some() {
@@ -52,7 +51,7 @@ pub fn create_canvas_window(app: &mut App) {
             }
         };
 
-        // Bevy 0.18 uses logical pixels for cursor + viewport conversions.
+        // Bevy 0.19 uses logical pixels for cursor + viewport conversions.
         // Our DOM canvas is sized in physical pixels (CSS size * devicePixelRatio),
         // so we set the window scale factor and logical size accordingly.
         window.resolution.set_scale_factor(scale_factor);

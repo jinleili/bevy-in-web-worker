@@ -74,7 +74,7 @@ pub fn create_window_by_offscreen_canvas(
 }
 
 fn create_window(app: &mut WorkerApp, view_obj: ViewObj, is_in_worker: bool) {
-    app.insert_non_send_resource(view_obj);
+    app.insert_non_send(view_obj);
 
     let mut info = ActiveInfo::new();
     info.is_in_worker = is_in_worker;
@@ -98,9 +98,11 @@ pub fn is_preparation_completed(ptr: u64) -> u32 {
         // 将 window 对象直接存到 app 上, 避免后继查询
         let mut windows_system_state: SystemState<Query<(Entity, &Window)>> =
             SystemState::from_world(app.world_mut());
-        if let Ok((entity, _)) = windows_system_state.get(app.world_mut()).single() {
-            app.window = entity;
-            return 1;
+        if let Ok(windows) = windows_system_state.get(app.world_mut()) {
+            if let Ok((entity, _)) = windows.single() {
+                app.window = entity;
+                return 1;
+            }
         }
     }
     0
@@ -110,7 +112,7 @@ pub fn is_preparation_completed(ptr: u64) -> u32 {
 #[wasm_bindgen]
 pub fn mouse_move(ptr: u64, x: f32, y: f32) {
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
-    // Bevy 0.18: CursorMoved.position uses logical pixels
+    // Bevy 0.19: CursorMoved.position uses logical pixels
     let position = Vec2::new(x, y);
     let cursor_move = CursorMoved {
         window: app.window,

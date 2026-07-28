@@ -1,3 +1,4 @@
+#[cfg(target_arch = "wasm32")]
 use crate::ray_pick::RayPickPlugin;
 use crate::{ActiveInfo, WorkerApp};
 use bevy::color::palettes::css::BLANCHED_ALMOND;
@@ -24,7 +25,10 @@ pub(crate) fn init_app() -> WorkerApp {
         }),
         ..default()
     });
+    #[cfg(target_arch = "wasm32")]
     app.add_plugins((default_plugins, RayPickPlugin));
+    #[cfg(not(target_arch = "wasm32"))]
+    app.add_plugins(default_plugins);
 
     app.add_systems(Startup, setup)
         .add_systems(Update, (rotate, update_aabbes))
@@ -118,7 +122,7 @@ fn setup(
 
     commands.spawn((
         PointLight {
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
             intensity: 20_000_000.,
             range: 100.0,
             shadow_depth_bias: 0.2,

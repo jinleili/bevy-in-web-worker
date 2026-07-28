@@ -1,17 +1,24 @@
+use bevy::prelude::*;
+#[cfg(target_arch = "wasm32")]
 use bevy::{
-    ecs::system::SystemState, platform::collections::HashMap, prelude::*,
-    window::WindowCloseRequested,
+    ecs::system::SystemState, platform::collections::HashMap, window::WindowCloseRequested,
 };
 use std::ops::{Deref, DerefMut};
 
+#[cfg(target_arch = "wasm32")]
 mod web_ffi;
+#[cfg(target_arch = "wasm32")]
 pub use web_ffi::*;
 
+#[cfg(target_arch = "wasm32")]
 mod canvas_view;
+#[cfg(target_arch = "wasm32")]
 use canvas_view::*;
 
+#[cfg(target_arch = "wasm32")]
 mod ray_pick;
 
+#[cfg(target_arch = "wasm32")]
 mod bevy_app;
 
 pub struct WorkerApp {
@@ -49,6 +56,7 @@ impl WorkerApp {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 #[derive(Debug, Resource)]
 pub(crate) struct ActiveInfo {
     pub hover: HashMap<Entity, u64>,
@@ -68,6 +76,7 @@ pub(crate) struct ActiveInfo {
     pub remaining_frames: u32,
 }
 
+#[cfg(target_arch = "wasm32")]
 impl ActiveInfo {
     pub fn new() -> Self {
         ActiveInfo {
@@ -82,10 +91,13 @@ impl ActiveInfo {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 pub(crate) fn close_bevy_window(mut app: Box<App>) {
     let mut windows_state: SystemState<Query<(Entity, &mut Window)>> =
         SystemState::from_world(app.world_mut());
-    let windows = windows_state.get_mut(app.world_mut());
+    let windows = windows_state
+        .get_mut(app.world_mut())
+        .expect("window query should be valid");
     let (entity, _window) = windows.iter().last().unwrap();
     app.world_mut()
         .write_message(WindowCloseRequested { window: entity });
