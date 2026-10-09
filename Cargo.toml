@@ -2,18 +2,18 @@
 name = "bevy-in-web-worker"
 description = "bevy +  web worker"
 authors = ["Jinlei Li"]
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
-rust-version = "1.95"
+rust-version = "1.97.1"
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-app-surface = { version = "=1.12.0", features = ["web_rwh"] }
+app-surface = { version = "=1.13.0", features = ["web_rwh"] }
 raw-window-handle = "0.6"
-wgpu = "29"
-bevy = { version = "0.19", features = [
+wgpu = "30"
+bevy = { version = "0.20", features = [
     "bevy_pbr",
     "bevy_gizmos",
     "bevy_gizmos_render",

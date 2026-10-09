@@ -34,12 +34,14 @@ Implemented `CanvasViewPlugin` to replace `bevy_winit`, allowing the Bevy engine
 
 ## Running
 
+Requires Rust 1.97.1 or newer.
+
 ```sh
 # Compile WASM:
 # Add Rust WebAssembly target
 rustup target add wasm32-unknown-unknown
 # Install wasm-bindgen command line tool
-cargo install -f wasm-bindgen-cli --version 0.2.126
+cargo install -f wasm-bindgen-cli --version 0.2.129
 
 # Run:
 # First install the http server
@@ -55,6 +57,7 @@ sh ./build-wasm.sh
 
 | Bevy version | `bevy-in-web-worker` version |
 | :----------- | :--------------------------- |
+| `0.20`       | `0.6`                        |
 | `0.19`       | `0.5`                        |
 | `0.18`       | `0.4`                        |
 | `0.17`       | `0.3`                        |

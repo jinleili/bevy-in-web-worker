@@ -30,12 +30,14 @@
 
 ## 代码运行
 
+需要 Rust 1.97.1 或更新版本。
+
 ```sh
 # 编译 WASM：
 # 添加 Rust WebAssembly target
 rustup target add wasm32-unknown-unknown
 # 安装 wasm-bindgen 命令行工具
-cargo install -f wasm-bindgen-cli --version 0.2.126
+cargo install -f wasm-bindgen-cli --version 0.2.129
 
 # 运行：
 # 先安装 http server

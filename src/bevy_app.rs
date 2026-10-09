@@ -6,7 +6,6 @@ use bevy::color::palettes::tailwind::BLUE_400;
 use bevy::{
     asset::RenderAssetUsages,
     color::palettes::basic::SILVER,
-    math::bounding::{Aabb3d, Bounded3d},
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };

@@ -51,7 +51,7 @@ pub fn create_canvas_window(app: &mut App) {
             }
         };
 
-        // Bevy 0.19 uses logical pixels for cursor + viewport conversions.
+        // Bevy uses logical pixels for cursor + viewport conversions.
         // Our DOM canvas is sized in physical pixels (CSS size * devicePixelRatio),
         // so we set the window scale factor and logical size accordingly.
         window.resolution.set_scale_factor(scale_factor);

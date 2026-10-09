@@ -4,7 +4,6 @@ use crate::{
     send_pick_from_rust, send_pick_from_worker,
 };
 use bevy::ecs::message::MessageReader;
-use bevy::math::bounding::RayCast3d;
 use bevy::platform::collections::HashMap;
 use bevy::{input::mouse::MouseWheel, prelude::*};
 use js_sys::BigInt;

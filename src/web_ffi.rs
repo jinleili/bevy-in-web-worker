@@ -112,7 +112,7 @@ pub fn is_preparation_completed(ptr: u64) -> u32 {
 #[wasm_bindgen]
 pub fn mouse_move(ptr: u64, x: f32, y: f32) {
     let app = unsafe { &mut *(ptr as *mut WorkerApp) };
-    // Bevy 0.19: CursorMoved.position uses logical pixels
+    // CursorMoved.position uses logical pixels.
     let position = Vec2::new(x, y);
     let cursor_move = CursorMoved {
         window: app.window,
